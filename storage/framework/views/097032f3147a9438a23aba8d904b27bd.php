@@ -32,9 +32,13 @@
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo e(route('products.index')); ?>">Products</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?php echo e(route('users.index')); ?>">Users</a>
-                </li>
+                <?php if(auth()->guard()->check()): ?>
+                    <?php if(auth()->user()->hasRole('admin')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?php echo e(route('users.index')); ?>">Users</a>
+                        </li>
+                    <?php endif; ?>
+                <?php endif; ?>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo e(route('grades.index')); ?>">Grades</a>
                 </li>
@@ -52,6 +56,11 @@
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <?php echo e(Auth::user()->name); ?>
 
+                            <?php if(auth()->user()->hasRole('admin')): ?>
+                                <span class="badge bg-danger">Admin</span>
+                            <?php else: ?>
+                                <span class="badge bg-primary">User</span>
+                            <?php endif; ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item" href="<?php echo e(route('profile')); ?>">Profile</a>
@@ -68,6 +77,15 @@
     </div>
 </nav>
 <div class="container mt-4">
+    <?php if(auth()->guard()->check()): ?>
+        <?php if(session('status')): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php echo e(session('status')); ?>
+
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
     <?php echo $__env->yieldContent('content'); ?>
 </div>
 

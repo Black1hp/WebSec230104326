@@ -109,6 +109,9 @@ class UsersController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Assign the 'user' role to new registrations
+        $user->assignRole('user');
+
         Auth::login($user);
 
         return redirect('/');

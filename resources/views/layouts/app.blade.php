@@ -32,9 +32,13 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('products.index') }}">Products</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('users.index') }}">Users</a>
-                </li>
+                @auth
+                    @if(auth()->user()->hasRole('admin'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('users.index') }}">Users</a>
+                        </li>
+                    @endif
+                @endauth
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('grades.index') }}">Grades</a>
                 </li>
@@ -51,6 +55,11 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             {{ Auth::user()->name }}
+                            @if(auth()->user()->hasRole('admin'))
+                                <span class="badge bg-danger">Admin</span>
+                            @else
+                                <span class="badge bg-primary">User</span>
+                            @endif
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item" href="{{ route('profile') }}">Profile</a>
@@ -67,6 +76,14 @@
     </div>
 </nav>
 <div class="container mt-4">
+    @auth
+        @if(session('status'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('status') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    @endauth
     @yield('content')
 </div>
 
