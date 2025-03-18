@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class UsersController extends Controller
@@ -23,13 +24,28 @@ class UsersController extends Controller
     /**
      * Show the form for creating/editing a user.
      */
-    public function edit(Request $request, User $user = null)
-    {
-        // If no $user is provided (new user), create an empty model instance.
-        $user = $user ?? new User();
-        return view('users.edit', compact('user'));
-    }
 
+    public function edit(Request $request, User $user = null){
+        $user = $user??auth()->user();
+        if(auth()->id()!=$user?->id) {
+            if(!auth()->user()->hasPermissionTo('edit_users')) abort(401);
+        }
+
+        $roles = [];
+        foreach(Role::all() as $role) {
+            $role->taken = ($user->hasRole($role->name));
+            $roles[] = $role;
+        }
+
+        $permissions = [];
+        $directPermissionsIds = $user->permissions()->pluck('id')->toArray();
+        foreach(Permission::all() as $permission) {
+            $permission->taken = in_array($permission->id, $directPermissionsIds);
+            $permissions[] = $permission;
+        }
+
+        return view('users.edit', compact('user', 'roles', 'permissions'));
+    }
     /**
      * Store or update the specified user in storage.
      */
@@ -54,6 +70,21 @@ class UsersController extends Controller
     {
         $user->delete();
         return redirect()->route('users.index');
+    }
+
+    /**
+     * Display the specified user.
+     */
+    public function show(Request $request, $userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            return view('users.show', compact('user'));
+        } catch (\Exception $e) {
+            Log::error('Error showing user: ' . $e->getMessage());
+            return redirect()->route('users.index')
+                ->with('error', 'User not found or you do not have permission to view this user.');
+        }
     }
 
     /**
@@ -107,10 +138,8 @@ class UsersController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'role' => 'user'  // Set default role
         ]);
-
-        // Assign the 'user' role to new registrations
-        $user->assignRole('user');
 
         Auth::login($user);
 
@@ -142,7 +171,7 @@ class UsersController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],

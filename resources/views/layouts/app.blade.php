@@ -33,7 +33,7 @@
                     <a class="nav-link" href="{{ route('products.index') }}">Products</a>
                 </li>
                 @auth
-                    @if(auth()->user() && auth()->user()->role === 'admin')
+                    @if(auth()->user()->role === 'admin')
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('users.index') }}">Users</a>
                         </li>
@@ -55,7 +55,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             {{ Auth::user()->name }}
-                            @if(auth()->user() && auth()->user()->role === 'admin')
+                            @if(auth()->user()->role === 'admin')
                                 <span class="badge bg-danger">Admin</span>
                             @else
                                 <span class="badge bg-primary">User</span>
@@ -63,9 +63,6 @@
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item" href="{{ route('profile') }}">Profile</a>
-                            @if(auth()->user() && auth()->user()->role === 'admin')
-                                <li><a class="dropdown-item" href="{{ route('users.index') }}">Users</a></li>
-                            @endif
                             <div class="dropdown-divider"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf

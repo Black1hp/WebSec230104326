@@ -45,11 +45,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/password', [UsersController::class, 'updatePassword'])->name('profile.password');
 
     // Admin Routes
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('auth')->group(function () {
         Route::get('users', [UsersController::class, 'index'])->name('users.index');
-        Route::get('users/edit/{user?}', [UsersController::class, 'edit'])->name('users.edit');
+        Route::get('users/create', [UsersController::class, 'edit'])->name('users.create');
+        Route::get('users/{user}/edit', [UsersController::class, 'edit'])->name('users.edit');
         Route::post('users/save/{user?}', [UsersController::class, 'save'])->name('users.save');
-        Route::delete('users/delete/{user}', [UsersController::class, 'delete'])->name('users.delete');
+        Route::delete('users/{user}', [UsersController::class, 'delete'])->name('users.delete');
+        Route::get('users/{user}', [UsersController::class, 'show'])->name('users.show');
     });
 });
 
