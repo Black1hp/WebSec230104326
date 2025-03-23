@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
+use function Laravel\Prompts\alert;
 
 class UsersController extends Controller
 {
@@ -17,6 +18,7 @@ class UsersController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
         $users = User::all();
         return view('users.index', compact('users'));
     }
@@ -24,11 +26,16 @@ class UsersController extends Controller
     /**
      * Show the form for creating/editing a user.
      */
-
     public function edit(Request $request, User $user = null)
     {
-        // Pass an empty user object if creating a new user
+        // If no $user is provided (new user), create an empty model instance.
         $user = $user ?? new User();
+
+        if ($user->exists) {
+            $this->authorize('update', $user);
+        } else {
+            $this->authorize('create', User::class);
+        }
 
         return view('users.edit', compact('user'));
     }
@@ -38,32 +45,29 @@ class UsersController extends Controller
      */
     public function save(Request $request, User $user = null)
     {
-        // Validate input data
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . ($user->id ?? 'null'),
-            'password' => $user ? 'sometimes|nullable|min:8' : 'required|min:8',
-            'role' => 'required|string|in:user,admin',  // Add this validation rule
-        ]);
+        // If no $user is provided, create a new instance.
+        $isNew = !($user && $user->exists);
+        $user = $user ?? new User();
 
-        // If no user is provided, create a new user.
-        if ($user === null) {
-            $user = new User();
-            $validatedData['password'] = Hash::make($validatedData['password']);
-        } elseif (!empty($validatedData['password'])) {
-            // Only hash password if provided for existing users
-            $validatedData['password'] = Hash::make($validatedData['password']);
+        if ($isNew) {
+            $this->authorize('create', User::class);
         } else {
-            // Remove password from validated data if empty (to prevent overwriting with null)
-            unset($validatedData['password']);
+            $this->authorize('update', $user);
         }
 
-        // Update user data
-        $user->fill($validatedData);
+        // Fill the model with validated form data.
+        // Make sure $fillable in App\Models\User matches these fields.
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . ($user->id ?? 'null')],
+            'role' => ['required', 'string', 'in:admin,user'], // Added validation for 'role'
+        ]);
+
+        $user->fill($validated);
         $user->save();
 
-        // Redirect to the users index page
-        return redirect()->route('users.index')->with('success', 'User saved successfully.');
+        // Redirect to the users index page (adjust the route name as needed).
+        return redirect()->route('users.index');
     }
 
     /**
@@ -71,6 +75,7 @@ class UsersController extends Controller
      */
     public function delete(Request $request, User $user)
     {
+        $this->authorize('delete', $user);
         $user->delete();
         return redirect()->route('users.index');
     }
@@ -82,11 +87,15 @@ class UsersController extends Controller
     {
         try {
             $user = User::findOrFail($userId);
+            $this->authorize('view', $user);
             return view('users.show', compact('user'));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('users.index')
+                ->with('error', 'User not found.');
         } catch (\Exception $e) {
             Log::error('Error showing user: ' . $e->getMessage());
             return redirect()->route('users.index')
-                ->with('error', 'User not found or you do not have permission to view this user.');
+                ->with('error', 'An error occurred while trying to view this user.');
         }
     }
 
@@ -114,7 +123,7 @@ class UsersController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'email' => __('The provided credentials do not match our records.'),
         ])->onlyInput('email');
     }
 
@@ -165,7 +174,9 @@ class UsersController extends Controller
      */
     public function profile()
     {
-        return view('users.profile', ['user' => Auth::user()]);
+        $user = Auth::user();
+        $this->authorize('view', $user);
+        return view('users.profile', ['user' => $user]);
     }
 
     /**
@@ -174,6 +185,7 @@ class UsersController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
+        $this->authorize('update', $user);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -190,12 +202,15 @@ class UsersController extends Controller
      */
     public function updatePassword(Request $request)
     {
+        $user = Auth::user();
+        $this->authorize('update', $user);
+
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        Auth::user()->update([
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 
