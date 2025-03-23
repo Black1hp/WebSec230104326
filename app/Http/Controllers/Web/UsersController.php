@@ -25,42 +25,45 @@ class UsersController extends Controller
      * Show the form for creating/editing a user.
      */
 
-    public function edit(Request $request, User $user = null){
-        $user = $user??auth()->user();
-        if(auth()->id()!=$user?->id) {
-            if(!auth()->user()->hasPermissionTo('edit_users')) abort(401);
-        }
+    public function edit(Request $request, User $user = null)
+    {
+        // Pass an empty user object if creating a new user
+        $user = $user ?? new User();
 
-        $roles = [];
-        foreach(Role::all() as $role) {
-            $role->taken = ($user->hasRole($role->name));
-            $roles[] = $role;
-        }
-
-        $permissions = [];
-        $directPermissionsIds = $user->permissions()->pluck('id')->toArray();
-        foreach(Permission::all() as $permission) {
-            $permission->taken = in_array($permission->id, $directPermissionsIds);
-            $permissions[] = $permission;
-        }
-
-        return view('users.edit', compact('user', 'roles', 'permissions'));
+        return view('users.edit', compact('user'));
     }
+
     /**
      * Store or update the specified user in storage.
      */
     public function save(Request $request, User $user = null)
     {
-        // If no $user is provided, create a new instance.
-        $user = $user ?? new User();
+        // Validate input data
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . ($user->id ?? 'null'),
+            'password' => $user ? 'sometimes|nullable|min:8' : 'required|min:8',
+            'role' => 'required|string|in:user,admin',  // Add this validation rule
+        ]);
 
-        // Fill the model with validated form data.
-        // Make sure $fillable in App\Models\User matches these fields.
-        $user->fill($request->all());
+        // If no user is provided, create a new user.
+        if ($user === null) {
+            $user = new User();
+            $validatedData['password'] = Hash::make($validatedData['password']);
+        } elseif (!empty($validatedData['password'])) {
+            // Only hash password if provided for existing users
+            $validatedData['password'] = Hash::make($validatedData['password']);
+        } else {
+            // Remove password from validated data if empty (to prevent overwriting with null)
+            unset($validatedData['password']);
+        }
+
+        // Update user data
+        $user->fill($validatedData);
         $user->save();
 
-        // Redirect to the users index page (adjust the route name as needed).
-        return redirect()->route('users.index');
+        // Redirect to the users index page
+        return redirect()->route('users.index')->with('success', 'User saved successfully.');
     }
 
     /**

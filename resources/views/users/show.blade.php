@@ -57,17 +57,18 @@
                             <p class="form-control-plaintext">{{ $user->created_at }}</p>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6 offset-md-4">
-                            <a href="{{ route('users.edit', $user) }}" class="btn btn-primary me-2">Edit User</a>
-                            <form action="{{ route('users.delete', $user) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete User</button>
-                            </form>
+                    @if(auth()->user()->role === 'admin')
+                        <div class="row">
+                            <div class="col-md-6 offset-md-4">
+                                <a href="{{ route('users.edit', $user) }}" class="btn btn-primary me-2">Edit User</a>
+                                <form action="{{ route('users.delete', $user) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete User</button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>

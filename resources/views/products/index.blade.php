@@ -5,10 +5,12 @@
         <div class="col col-10">
             <h1>Products</h1>
         </div>
-        <div class="col col-2">
-            <a href="{{route('products.edit')}}"
-               class="btn btn-success form-control">Add Product</a>
-        </div>
+        @can('create', App\Models\Product::class)
+            <div class="col col-2">
+                <a href="{{route('products.edit')}}"
+                   class="btn btn-success form-control">Add Product</a>
+            </div>
+        @endcan
     </div>
     <form>
         <div class="row mt-4" >
@@ -56,14 +58,16 @@
                             <div class="col-8">
                                 <h3>{{$product->name}}</h3>
                             </div>
-                            <div class="col col-2">
-                                <a href="{{route('products.edit', $product->id)}}"
-                                   class="btn btn-success form-control">Edit</a>
-                            </div>
-                            <div class="col col-2">
-                                <a href="{{route('products.delete', $product->id)}}"
-                                   class="btn btn-danger form-control">Delete</a>
-                            </div>
+                            @if(auth()->user()->role === 'admin')
+                                <div class="col col-2">
+                                    <a href="{{route('products.edit', $product->id)}}"
+                                       class="btn btn-success form-control">Edit</a>
+                                </div>
+                                <div class="col col-2">
+                                    <a href="{{route('products.delete', $product->id)}}"
+                                       class="btn btn-danger form-control">Delete</a>
+                                </div>
+                            @endif
                         </div>
 
                         <table class="table table-striped">
