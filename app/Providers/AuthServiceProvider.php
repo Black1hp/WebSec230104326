@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Game;
 use App\Policies\PostPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Models\Product;
@@ -18,6 +19,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Post::class => PostPolicy::class,
         Product::class => ProductPolicy::class,
+        Game::class => GamePolicy::class,
     ];
 
     /**

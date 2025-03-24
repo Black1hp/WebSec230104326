@@ -2,8 +2,9 @@
 @section('title', 'Edit Page')
 @section('content')
 
-    <form action="{{route('products.save', $product->id)}}" method="post">
-        {{ csrf_field() }}
+    <form action="{{route('products.edit', $product->id)}}" method="post">
+        @csrf
+        @method('PUT')
 
         <div class="row mb-2">
             <div class="col-6">

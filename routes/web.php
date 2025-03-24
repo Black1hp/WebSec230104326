@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Web\GameController;
 use App\Http\Controllers\Web\GradesController;
 use App\Http\Controllers\Web\ProductsController;
 use App\Http\Controllers\Web\UsersController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', fn() => view('welcome'))->name('home');
 
@@ -46,7 +48,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('products')->middleware('auth')->group(function () {
     Route::get('/', [ProductsController::class, 'index'])->name('products.index');
     Route::get('/edit/{product?}', [ProductsController::class, 'edit'])->name('products.edit');
-    Route::post('/save/{product?}', [ProductsController::class, 'save'])->name('products.save');
+    Route::put( '/save/{product?}', [ProductsController::class, 'save'])->name('products.save');
     Route::delete('/{product}', [ProductsController::class, 'delete'])->name('products.delete');
 });
 
@@ -58,4 +60,15 @@ Route::prefix('grades')->middleware('auth')->group(function () {
     Route::post('/save/{grade?}', [GradesController::class, 'save'])->name('grades.save');
     Route::delete('/{grade}', [GradesController::class, 'delete'])->name('grades.delete');
     Route::get('/{grade}', [GradesController::class, 'show'])->name('grades.show');
+});
+
+
+/* Games Routes */
+Route::prefix('games')->middleware('auth')->group(function () {
+    Route::get('/', [GameController::class, 'index'])->name('games.index');
+    Route::get('/create', [GameController::class, 'create'])->name('games.create');
+    Route::get('/edit/{game?}', [GameController::class, 'edit'])->name('games.edit');
+    Route::post('/save/{game?}', [GameController::class, 'save'])->name('games.save');
+    Route::delete('/{game}', [GameController::class, 'delete'])->name('games.delete');
+    Route::get('/{game}', [GameController::class, 'show'])->name('games.show');
 });
