@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\GradesController;
 use App\Http\Controllers\Web\ProductsController;
 use App\Http\Controllers\Web\UsersController;
+use App\Http\Controllers\Web\PurchaseController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -28,10 +29,14 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('profile')->group(function () {
         Route::get('/', [UsersController::class, 'profile'])->name('profile');
+        Route::get('/profile', 'ProfileController@show')->name('profile.show');
         Route::post('/update', [UsersController::class, 'updateProfile'])->name('profile.update');
         Route::post('/password', [UsersController::class, 'updatePassword'])->name('profile.password');
     });
+});
 
+/* Admin Routes */
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/', [UsersController::class, 'index'])->name('users.index');
         Route::get('/create', [UsersController::class, 'edit'])->name('users.create');
@@ -45,9 +50,28 @@ Route::middleware('auth')->group(function () {
 /* Products Routes */
 Route::prefix('products')->middleware('auth')->group(function () {
     Route::get('/', [ProductsController::class, 'index'])->name('products.index');
-    Route::get('/edit/{product?}', [ProductsController::class, 'edit'])->name('products.edit');
-    Route::post('/save/{product?}', [ProductsController::class, 'save'])->name('products.save');
-    Route::delete('/{product}', [ProductsController::class, 'delete'])->name('products.delete');
+
+    // Employee routes - putting these BEFORE the general {product} route
+    Route::middleware('employee')->group(function () {
+        Route::get('/edit/{product?}', [ProductsController::class, 'edit'])->name('products.edit');
+        Route::post('/save/{product?}', [ProductsController::class, 'save'])->name('products.save');
+        Route::delete('/{product}', [ProductsController::class, 'delete'])->name('products.delete');
+    });
+
+    // This general catch-all route should come AFTER any specific routes
+    Route::get('/{product}', [ProductsController::class, 'show'])->name('products.show');
+});
+
+/* Customer Routes */
+Route::middleware(['auth'])->prefix('customer')->group(function () {
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::post('/purchase/{product}', [PurchaseController::class, 'store'])->name('purchases.store');
+});
+
+/* Employee Routes */
+Route::middleware(['auth', 'employee'])->prefix('employee')->group(function () {
+    Route::get('/customers', [UsersController::class, 'customerList'])->name('employee.customers');
+    Route::post('/customers/{user}/add-credit', [UsersController::class, 'addCredit'])->name('employee.add-credit');
 });
 
 /* Grades Routes */

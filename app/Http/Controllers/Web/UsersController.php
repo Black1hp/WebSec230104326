@@ -16,10 +16,9 @@ class UsersController extends Controller
     /**
      * Display a listing of the users.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $this->authorize('viewAny', User::class);
-        $users = User::all();
+        $users = \App\Models\User::all();
         return view('users.index', compact('users'));
     }
 
@@ -45,7 +44,6 @@ class UsersController extends Controller
      */
     public function save(Request $request, User $user = null)
     {
-        // If no $user is provided, create a new instance.
         $isNew = !($user && $user->exists);
         $user = $user ?? new User();
 
@@ -55,19 +53,28 @@ class UsersController extends Controller
             $this->authorize('update', $user);
         }
 
-        // Fill the model with validated form data.
-        // Make sure $fillable in App\Models\User matches these fields.
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . ($user->id ?? 'null')],
-            'role' => ['required', 'string', 'in:admin,user'], // Added validation for 'role'
+            'role' => ['required', 'string', 'in:admin,employee,customer'],
+            'credit' => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        // Only allow admin to create employee accounts
+        if ($validated['role'] === 'employee' && !auth()->user()->isAdmin()) {
+            return back()->with('error', 'Only administrators can create employee accounts.');
+        }
+
         $user->fill($validated);
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
         $user->save();
 
-        // Redirect to the users index page (adjust the route name as needed).
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')
+            ->with('success', $isNew ? 'User created successfully.' : 'User updated successfully.');
     }
 
     /**
@@ -150,12 +157,13 @@ class UsersController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'user'  // Set default role
+            'role' => 'customer',  // Set default role to customer
+            'credit' => 0.00,      // Initialize credit to 0
         ]);
 
         Auth::login($user);
 
-        return redirect('/');
+        return redirect('/')->with('success', 'Registration successful! Welcome to our store.');
     }
 
     /**
@@ -215,5 +223,29 @@ class UsersController extends Controller
         ]);
 
         return back()->with('status', 'Password updated successfully!');
+    }
+
+    public function customerList()
+    {
+        $this->authorize('viewAny', User::class);
+        $customers = User::where('role', 'customer')->get();
+        return view('users.customer-list', compact('customers'));
+    }
+
+    public function addCredit(Request $request, User $user)
+    {
+        $this->authorize('update', $user);
+
+        if ($user->role !== 'customer') {
+            return back()->with('error', 'Can only add credit to customer accounts.');
+        }
+
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $user->addCredit($validated['amount']);
+
+        return back()->with('success', 'Credit added successfully.');
     }
 }

@@ -14,6 +14,12 @@ class ProductsController extends Controller{
         return view("products.index", compact('products'));
     }
 
+    public function show(Product $product)
+    {
+        $this->authorize('view', $product);
+        return view('products.show', compact('product'));
+    }
+
     public function edit(Request $request, Product $product = null) {
         if ($product) {
             $this->authorize('update', $product);
@@ -30,15 +36,29 @@ class ProductsController extends Controller{
         } else {
             $this->authorize('create', Product::class);
         }
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:64', 'unique:products,code,' . ($product->id ?? 'null')],
+            'name' => ['required', 'string', 'max:256'],
+            'model' => ['required', 'string', 'max:128'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'description' => ['required', 'string'],
+            'photo' => ['required', 'string', 'max:128'],
+        ]);
+
         $product = $product ?? new Product();
-        $product->fill($request->all());
+        $product->fill($validated);
         $product->save();
-        return redirect()->route('products.index');
+
+        return redirect()->route('products.index')
+            ->with('success', $product->wasRecentlyCreated ? 'Product created successfully.' : 'Product updated successfully.');
     }
 
     public function delete(Request $request, Product $product) {
         $this->authorize('delete', $product);
         $product->delete();
-        return redirect()->route('products.index');
+        return redirect()->route('products.index')
+            ->with('success', 'Product deleted successfully.');
     }
 }

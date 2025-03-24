@@ -62,7 +62,7 @@
                             @endif
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a class="dropdown-item" href="{{ route('profile') }}">Profile</a>
+                            <a class="dropdown-item" href="{{ route('profile.show') }}">Profile</a>
                             <div class="dropdown-divider"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
