@@ -26,6 +26,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Credit</th>
                             <th>Created</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -49,10 +50,22 @@
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
+                                <td>
+                                    @if($user->role === 'customer' || $user->role === 'user')
+                                        ${{ number_format($user->credit, 2) }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>{{ $user->created_at->format('M d, Y') }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-info">View</a>
                                     <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-primary">Edit</a>
+                                    @if(($user->role === 'customer' || $user->role === 'user') && auth()->user()->role === 'admin')
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCreditModal{{ $user->id }}">
+                                            Add Credit
+                                        </button>
+                                    @endif
                                     <form action="{{ route('users.delete', $user) }}" method="POST" style="display: inline;">
                                         @csrf
                                         @method('DELETE')
@@ -60,9 +73,36 @@
                                     </form>
                                 </td>
                             </tr>
+                            
+                            <!-- Add Credit Modal -->
+                            @if(($user->role === 'customer' || $user->role === 'user') && auth()->user()->role === 'admin')
+                                <div class="modal fade" id="addCreditModal{{ $user->id }}" tabindex="-1" aria-labelledby="addCreditModalLabel{{ $user->id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="addCreditModalLabel{{ $user->id }}">Add Credit for {{ $user->name }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ route('admin.add-credit', $user) }}" method="POST">
+                                                @csrf
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label for="amount{{ $user->id }}" class="form-label">Amount ($)</label>
+                                                        <input type="number" class="form-control" id="amount{{ $user->id }}" name="amount" min="0.01" step="0.01" required>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Add Credit</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4">No users found</td>
+                                <td colspan="7" class="text-center py-4">No users found</td>
                             </tr>
                         @endforelse
                         </tbody>

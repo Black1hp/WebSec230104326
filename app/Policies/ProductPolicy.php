@@ -25,16 +25,16 @@ class ProductPolicy
 
     public function create(User $user)
     {
-        return $user->role === 'admin'; // Only admins can create products
+        return $user->role === 'admin' || $user->role === 'employee'; // Allow admins and employees to create products
     }
 
     public function update(User $user, Product $product)
     {
-        return $user->role === 'admin'; // Only admins can update products
+        return $user->role === 'admin' || $user->role === 'employee'; // Allow admins and employees to update products
     }
 
     public function delete(User $user, Product $product)
     {
-        return $user->role === 'admin'; // Only admins can delete products
+        return $user->role === 'admin' || $user->role === 'employee'; // Allow admins and employees to delete products
     }
 }

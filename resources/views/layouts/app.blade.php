@@ -61,12 +61,19 @@
                                 <span class="badge bg-warning text-dark">Employee</span>
                             @elseif(auth()->user()->role === 'customer')
                                 <span class="badge bg-info text-dark">Customer</span>
+                                <span class="badge bg-success">${{ number_format(auth()->user()->credit, 2) }}</span>
                             @else
                                 <span class="badge bg-secondary">User</span>
+                                <span class="badge bg-success">${{ number_format(auth()->user()->credit, 2) }}</span>
                             @endif
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a class="dropdown-item" href="{{ route('profile.show') }}">Profile</a>
+                            @if(auth()->user()->role === 'admin')
+                                <a class="dropdown-item" href="{{ route('admin.credit-management') }}">Credit Management</a>
+                            @elseif(auth()->user()->role === 'employee')
+                                <a class="dropdown-item" href="{{ route('employee.credit-management') }}">Credit Management</a>
+                            @endif
+                            <a class="dropdown-item" href="{{ route('profile') }}">Profile</a>
                             <div class="dropdown-divider"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf

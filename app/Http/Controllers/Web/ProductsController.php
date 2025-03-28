@@ -10,7 +10,18 @@ class ProductsController extends Controller{
 
     public function index(Request $request) {
         $this->authorize('viewAny', Product::class); // Changed from 'view' to 'viewAny'
-        $products = Product::all();
+        
+        // Get the authenticated user
+        $user = auth()->user();
+        
+        // For admin and employee, show all products
+        if ($user && ($user->role === 'admin' || $user->role === 'employee')) {
+            $products = Product::all();
+        } else {
+            // For regular users (customers), only show products with stock > 0
+            $products = Product::where('stock', '>', 0)->get();
+        }
+        
         return view("products.index", compact('products'));
     }
 

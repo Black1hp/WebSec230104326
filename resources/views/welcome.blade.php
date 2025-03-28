@@ -4,7 +4,15 @@
 
     <div class="card m-4">
         <div class="card-body">
-            Welcome to Home Page
+            <h3>Welcome to WebSecService</h3>
+            @auth
+                @if(auth()->user()->role === 'customer' || auth()->user()->role === 'user')
+                    <div class="alert alert-info mt-3">
+                        <strong>Your Credit Balance:</strong> ${{ number_format(auth()->user()->credit, 2) }}
+                        <a href="{{ route('profile') }}" class="btn btn-sm btn-primary ms-2">View Profile</a>
+                    </div>
+                @endif
+            @endauth
         </div>
     </div>
     <script>

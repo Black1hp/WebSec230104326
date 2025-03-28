@@ -29,9 +29,9 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('profile')->group(function () {
         Route::get('/', [UsersController::class, 'profile'])->name('profile');
-        Route::get('/profile', 'ProfileController@show')->name('profile.show');
         Route::post('/update', [UsersController::class, 'updateProfile'])->name('profile.update');
         Route::post('/password', [UsersController::class, 'updatePassword'])->name('profile.password');
+        Route::get('/{user}', [UsersController::class, 'showUserProfile'])->name('profile.user');
     });
 });
 
@@ -45,6 +45,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         Route::delete('/{user}', [UsersController::class, 'delete'])->name('users.delete');
         Route::get('/{user}', [UsersController::class, 'show'])->name('users.show');
     });
+    
+    // Credit management routes
+    Route::get('/credit-management', [UsersController::class, 'creditManagement'])->name('admin.credit-management');
+    Route::post('/users/{user}/update-credit', [UsersController::class, 'updateCredit'])->name('admin.update-credit');
+    Route::post('/users/{user}/add-credit', [UsersController::class, 'addCredit'])->name('admin.add-credit');
 });
 
 /* Products Routes */

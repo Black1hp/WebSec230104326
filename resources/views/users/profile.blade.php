@@ -11,6 +11,27 @@
                 </div>
             @endif
 
+            @if ($user->role === 'customer' || $user->role === 'user')
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>{{ __('Credit Balance') }}</span>
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee')
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCreditModal">
+                                Add Credit
+                            </button>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 offset-md-3 text-center">
+                                <h3 class="mb-0">${{ number_format($user->credit, 2) }}</h3>
+                                <p class="text-muted mt-2">Available credit balance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="card mb-4">
                 <div class="card-header">{{ __('Profile Information') }}</div>
 
@@ -127,4 +148,31 @@
         </div>
     </div>
 </div>
+
+<!-- Add Credit Modal -->
+@if(($user->role === 'customer' || $user->role === 'user') && (auth()->user()->role === 'admin' || auth()->user()->role === 'employee'))
+    <div class="modal fade" id="addCreditModal" tabindex="-1" aria-labelledby="addCreditModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCreditModalLabel">Add Credit for {{ $user->name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('employee.add-credit', $user) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount ($)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Credit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 @endsection

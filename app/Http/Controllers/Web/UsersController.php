@@ -236,7 +236,7 @@ class UsersController extends Controller
     {
         $this->authorize('update', $user);
 
-        if ($user->role !== 'customer') {
+        if ($user->role !== 'customer' && $user->role !== 'user') {
             return back()->with('error', 'Can only add credit to customer accounts.');
         }
 
@@ -247,5 +247,22 @@ class UsersController extends Controller
         $user->addCredit($validated['amount']);
 
         return back()->with('success', 'Credit added successfully.');
+    }
+
+    /**
+     * Display the profile of a specific user.
+     */
+    public function showUserProfile(User $user)
+    {
+        // Check if the current user is authorized to view this user's profile
+        $this->authorize('view', $user);
+        
+        // Get the authenticated user's role
+        $authUser = Auth::user();
+        
+        return view('users.show', [
+            'user' => $user,
+            'viewerRole' => $authUser->role
+        ]);
     }
 }

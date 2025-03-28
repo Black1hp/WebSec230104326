@@ -16,7 +16,18 @@ class UserPolicy
 
     public function view(User $user, User $model)
     {
-        return $user->role === 'admin' || $user->id === $model->id;
+        // Admin can view any user profile
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Employee can view customer profiles and users with legacy 'user' role
+        if ($user->role === 'employee' && ($model->role === 'customer' || $model->role === 'user')) {
+            return true;
+        }
+        
+        // Any user can view their own profile
+        return $user->id === $model->id;
     }
 
     public function create(User $user)
@@ -45,4 +56,3 @@ class UserPolicy
         return $user->role === 'admin' && $user->id !== $model->id;
     }
 }
-
