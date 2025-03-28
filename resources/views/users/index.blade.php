@@ -37,7 +37,15 @@
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td>
-                                    <span class="badge {{ $user->role === 'admin' ? 'bg-danger' : 'bg-info' }}">
+                                    @php
+                                        $badgeClass = match($user->role) {
+                                            'admin' => 'bg-danger',
+                                            'employee' => 'bg-warning text-dark',
+                                            'customer' => 'bg-info text-dark',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }}">
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
@@ -64,4 +72,3 @@
         </div>
     </div>
 @endsection
-

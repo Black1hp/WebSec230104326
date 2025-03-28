@@ -57,8 +57,12 @@
                             {{ Auth::user()->name }}
                             @if(auth()->user()->role === 'admin')
                                 <span class="badge bg-danger">Admin</span>
+                            @elseif(auth()->user()->role === 'employee')
+                                <span class="badge bg-warning text-dark">Employee</span>
+                            @elseif(auth()->user()->role === 'customer')
+                                <span class="badge bg-info text-dark">Customer</span>
                             @else
-                                <span class="badge bg-primary">User</span>
+                                <span class="badge bg-secondary">User</span>
                             @endif
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">

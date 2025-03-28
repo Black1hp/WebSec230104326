@@ -22,6 +22,13 @@
                         </div>
                     </div>
 
+                    <div class="row mb-3">
+                        <label class="col-md-4 col-form-label text-md-end">{{ __('Role') }}</label>
+                        <div class="col-md-6">
+                            <p class="form-control-plaintext text-capitalize">{{ $user->role }}</p>
+                        </div>
+                    </div>
+
                     <form method="POST" action="{{ route('profile.update') }}">
                         @csrf
 
@@ -120,4 +127,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

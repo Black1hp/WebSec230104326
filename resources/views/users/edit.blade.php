@@ -55,7 +55,8 @@
                             <div class="mb-3">
                                 <label for="role" class="form-label">Role</label>
                                 <select class="form-select @error('role') is-invalid @enderror" name="role" id="role">
-                                    <option value="user" {{ (old('role', $user->role ?? 'user') == 'user') ? 'selected' : '' }}>User</option>
+                                    <option value="customer" {{ (old('role', $user->role ?? 'customer') == 'customer') ? 'selected' : '' }}>Customer</option>
+                                    <option value="employee" {{ (old('role', $user->role ?? '') == 'employee') ? 'selected' : '' }}>Employee</option>
                                     <option value="admin" {{ (old('role', $user->role ?? '') == 'admin') ? 'selected' : '' }}>Admin</option>
                                 </select>
                                 @error('role')
