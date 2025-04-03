@@ -45,17 +45,25 @@ class UserPolicy
 
     public function update(User $user, User $model = null)
     {
+        // If no model is provided (creating a new user)
         if ($model === null) {
             return in_array($user->role, ['admin', 'employee']);
         }
         
-        // Allow admin and employee to update credit for customer or user roles
-        if (in_array($user->role, ['admin', 'employee']) && 
-            in_array($model->role, ['customer', 'user'])) {
+        // Admin can update any user except other admins (unless it's themselves)
+        if ($user->role === 'admin') {
+            if ($model->role === 'admin' && $user->id !== $model->id) {
+                return false; // Prevent admin from editing other admins
+            }
+            return true; // Admin can edit all other users
+        }
+        
+        // Employee can only update credit for customers
+        if ($user->role === 'employee' && $model->role === 'customer') {
             return true;
         }
         
-        // Allow user to update their own profile
+        // Users can update their own profile
         return $user->id === $model->id;
     }
 
