@@ -11,7 +11,7 @@ class UserPolicy
 
     public function viewAny(User $user)
     {
-        return $user->role === 'admin';
+        return in_array($user->role, ['admin', 'employee']);
     }
 
     public function view(User $user, User $model)
@@ -46,9 +46,17 @@ class UserPolicy
     public function update(User $user, User $model = null)
     {
         if ($model === null) {
-            return $user->role === 'admin';
+            return in_array($user->role, ['admin', 'employee']);
         }
-        return $user->role === 'admin' || $user->id === $model->id;
+        
+        // Allow admin and employee to update credit for customer or user roles
+        if (in_array($user->role, ['admin', 'employee']) && 
+            in_array($model->role, ['customer', 'user'])) {
+            return true;
+        }
+        
+        // Allow user to update their own profile
+        return $user->id === $model->id;
     }
 
     public function delete(User $user, User $model)

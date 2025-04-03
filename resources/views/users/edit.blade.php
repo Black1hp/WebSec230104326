@@ -54,11 +54,20 @@
 
                             <div class="mb-3">
                                 <label for="role" class="form-label">Role</label>
-                                <select class="form-select @error('role') is-invalid @enderror" name="role" id="role">
+                                <select class="form-select @error('role') is-invalid @enderror" 
+                                        name="role" 
+                                        id="role"
+                                        @if(isset($user->id) && $user->role === 'admin') disabled @endif>
                                     <option value="customer" {{ (old('role', $user->role ?? 'customer') == 'customer') ? 'selected' : '' }}>Customer</option>
                                     <option value="employee" {{ (old('role', $user->role ?? '') == 'employee') ? 'selected' : '' }}>Employee</option>
                                     <option value="admin" {{ (old('role', $user->role ?? '') == 'admin') ? 'selected' : '' }}>Admin</option>
                                 </select>
+                                @if(isset($user->id) && $user->role === 'admin')
+                                    <input type="hidden" name="role" value="admin">
+                                    <div class="form-text text-danger">
+                                        Admin roles cannot be changed to prevent security issues.
+                                    </div>
+                                @endif
                                 @error('role')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

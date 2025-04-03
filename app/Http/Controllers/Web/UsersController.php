@@ -60,6 +60,13 @@ class UsersController extends Controller
             'credit' => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        // Prevent admin role downgrade
+        if (!$isNew && $user->role === 'admin' && $validated['role'] !== 'admin') {
+            return back()
+                ->withInput()
+                ->with('error', 'Admin roles cannot be downgraded to other roles.');
+        }
+
         // Only allow admin to create employee accounts
         if ($validated['role'] === 'employee' && !auth()->user()->isAdmin()) {
             return back()->with('error', 'Only administrators can create employee accounts.');
@@ -236,13 +243,25 @@ class UsersController extends Controller
     {
         $this->authorize('update', $user);
 
-        if ($user->role !== 'customer' && $user->role !== 'user') {
+        if ($user->role !== 'customer') {
             return back()->with('error', 'Can only add credit to customer accounts.');
         }
 
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0.01'],
-        ]);
+        // Different validation rules based on user role
+        if (auth()->user()->role === 'admin') {
+            $validated = $request->validate([
+                'amount' => ['required', 'numeric'],
+            ]);
+        } else {
+            $validated = $request->validate([
+                'amount' => ['required', 'numeric', 'min:0.01'],
+            ]);
+
+            // Double-check for employees to ensure only positive values
+            if ($validated['amount'] <= 0) {
+                return back()->with('error', 'As an employee, you can only add positive credit amounts.');
+            }
+        }
 
         $user->addCredit($validated['amount']);
 
@@ -257,12 +276,60 @@ class UsersController extends Controller
         // Check if the current user is authorized to view this user's profile
         $this->authorize('view', $user);
         
-        // Get the authenticated user's role
-        $authUser = Auth::user();
+        // Eager load purchases and products if the user is a customer
+        if ($user->role === 'customer') {
+            $user->load(['purchases' => function ($query) {
+                $query->with('product')->latest();
+            }]);
+        }
         
         return view('users.show', [
             'user' => $user,
-            'viewerRole' => $authUser->role
+            'viewerRole' => auth()->user()->role
         ]);
+    }
+
+    /**
+     * Display the credit management page for administrators and employees.
+     * Shows all customers with their credit balances.
+     */
+    public function creditManagement()
+    {
+        $this->authorize('viewAny', User::class);
+        $customers = User::where('role', 'customer')->get();
+        return view('users.credit-management', compact('customers'));
+    }
+
+    /**
+     * Update a user's credit balance to a specific value.
+     * Only accessible by administrators.
+     */
+    public function updateCredit(Request $request, User $user)
+    {
+        $this->authorize('update', $user);
+
+        if ($user->role !== 'customer') {
+            return back()->with('error', 'Can only update credit for customer accounts.');
+        }
+
+        // Different validation rules based on user role
+        if (auth()->user()->role === 'admin') {
+            $validated = $request->validate([
+                'amount' => ['required', 'numeric'],
+            ]);
+        } else {
+            $validated = $request->validate([
+                'amount' => ['required', 'numeric', 'min:0.01'],
+            ]);
+
+            // Double-check for employees to ensure only positive values
+            if ($validated['amount'] <= 0) {
+                return back()->with('error', 'As an employee, you can only set positive credit amounts.');
+            }
+        }
+
+        $user->update(['credit' => $validated['amount']]);
+
+        return back()->with('success', 'Credit updated successfully.');
     }
 }

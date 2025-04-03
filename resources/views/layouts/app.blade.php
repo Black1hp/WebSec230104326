@@ -34,7 +34,11 @@
                 </li>
                 @can('viewAny', App\Models\User::class)
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">Users</a>
+                        @if(auth()->user()->role === 'employee')
+                            <a class="nav-link" href="{{ route('employee.customers') }}">Customers</a>
+                        @else
+                            <a class="nav-link" href="{{ route('users.index') }}">Users</a>
+                        @endif
                     </li>
                 @endcan
                 @can('viewAny', App\Models\Grade::class)

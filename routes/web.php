@@ -48,8 +48,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // Credit management routes
     Route::get('/credit-management', [UsersController::class, 'creditManagement'])->name('admin.credit-management');
-    Route::post('/users/{user}/update-credit', [UsersController::class, 'updateCredit'])->name('admin.update-credit');
     Route::post('/users/{user}/add-credit', [UsersController::class, 'addCredit'])->name('admin.add-credit');
+    Route::post('/users/{user}/update-credit', [UsersController::class, 'updateCredit'])->name('admin.update-credit');
 });
 
 /* Products Routes */
@@ -76,7 +76,9 @@ Route::middleware(['auth'])->prefix('customer')->group(function () {
 /* Employee Routes */
 Route::middleware(['auth', 'employee'])->prefix('employee')->group(function () {
     Route::get('/customers', [UsersController::class, 'customerList'])->name('employee.customers');
+    Route::get('/credit-management', [UsersController::class, 'creditManagement'])->name('employee.credit-management');
     Route::post('/customers/{user}/add-credit', [UsersController::class, 'addCredit'])->name('employee.add-credit');
+    Route::post('/customers/{user}/update-credit', [UsersController::class, 'updateCredit'])->name('employee.update-credit');
 });
 
 /* Grades Routes */

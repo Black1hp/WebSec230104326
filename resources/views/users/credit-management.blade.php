@@ -27,7 +27,7 @@
 
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">User Credit Balances</h5>
+            <h5 class="mb-0">Customer Credit Balances</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -43,7 +43,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($users as $user)
+                        @forelse ($customers as $user)
                             <tr>
                                 <td>{{ $user->id }}</td>
                                 <td>{{ $user->name }}</td>
@@ -67,9 +67,11 @@
                                     <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCreditModal{{ $user->id }}">
                                         Add Credit
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateCreditModal{{ $user->id }}">
-                                        Update Balance
-                                    </button>
+                                    @if(auth()->user()->role === 'admin')
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateCreditModal{{ $user->id }}">
+                                            Update Balance
+                                        </button>
+                                    @endif
                                     <a href="{{ route('profile.user', $user) }}" class="btn btn-sm btn-info">
                                         View Profile
                                     </a>
@@ -89,8 +91,23 @@
                                             <div class="modal-body">
                                                 <div class="mb-3">
                                                     <label for="amount{{ $user->id }}" class="form-label">Amount to Add ($)</label>
-                                                    <input type="number" class="form-control" id="amount{{ $user->id }}" name="amount" min="0.01" step="0.01" required>
+                                                    <input type="number" 
+                                                           class="form-control" 
+                                                           id="amount{{ $user->id }}" 
+                                                           name="amount" 
+                                                           @if(auth()->user()->role !== 'admin')
+                                                           min="0.01"
+                                                           step="0.01"
+                                                           @else
+                                                           step="any"
+                                                           @endif
+                                                           required>
                                                     <div class="form-text">Current balance: ${{ number_format($user->credit, 2) }}</div>
+                                                    @if(auth()->user()->role !== 'admin')
+                                                        <div class="form-text text-danger">
+                                                            <strong>Note:</strong> You can only add positive credit amounts.
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
@@ -101,35 +118,37 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Update Credit Modal -->
-                            <div class="modal fade" id="updateCreditModal{{ $user->id }}" tabindex="-1" aria-labelledby="updateCreditModalLabel{{ $user->id }}" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="updateCreditModalLabel{{ $user->id }}">Update Credit Balance for {{ $user->name }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form action="{{ auth()->user()->role === 'admin' ? route('admin.update-credit', $user) : route('employee.update-credit', $user) }}" method="POST">
-                                            @csrf
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label for="credit{{ $user->id }}" class="form-label">New Credit Balance ($)</label>
-                                                    <input type="number" class="form-control" id="credit{{ $user->id }}" name="credit" min="0" step="0.01" value="{{ $user->credit }}" required>
-                                                    <div class="form-text">This will override the current balance of ${{ number_format($user->credit, 2) }}</div>
+
+                            <!-- Update Credit Modal (Admin Only) -->
+                            @if(auth()->user()->role === 'admin')
+                                <div class="modal fade" id="updateCreditModal{{ $user->id }}" tabindex="-1" aria-labelledby="updateCreditModalLabel{{ $user->id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="updateCreditModalLabel{{ $user->id }}">Update Credit for {{ $user->name }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ route('admin.update-credit', $user) }}" method="POST">
+                                                @csrf
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label for="newAmount{{ $user->id }}" class="form-label">New Credit Balance ($)</label>
+                                                        <input type="number" class="form-control" id="newAmount{{ $user->id }}" name="amount" min="0" step="0.01" value="{{ $user->credit }}" required>
+                                                        <div class="form-text">Current balance: ${{ number_format($user->credit, 2) }}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary">Update Balance</button>
-                                            </div>
-                                        </form>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Update Balance</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4">No users found</td>
+                                <td colspan="6" class="text-center">No customers found.</td>
                             </tr>
                         @endforelse
                     </tbody>

@@ -2,7 +2,7 @@
 @section('title', 'Edit Page')
 @section('content')
 
-    <form action="{{route('products.save', $product->id)}}" method="post">
+    <form action="{{ $product->id ? route('products.save', $product->id) : route('products.save') }}" method="post">
         {{ csrf_field() }}
 
         <div class="row mb-2">
@@ -73,5 +73,3 @@
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 @endsection
-
-
