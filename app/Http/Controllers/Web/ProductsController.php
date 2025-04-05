@@ -57,6 +57,7 @@ class ProductsController extends Controller {
 	        'model' => ['required', 'string', 'max:256'],
 	        'description' => ['required', 'string', 'max:1024'],
 	        'price' => ['required', 'numeric'],
+	        'amount' => ['required', 'integer', 'min:0'],
 	    ]);
 
 		$product = $product??new Product();
@@ -90,6 +91,12 @@ class ProductsController extends Controller {
         
         // Calculate total price
         $quantity = $request->input('quantity', 1);
+        
+        // Check if there's enough product amount available
+        if ($product->amount < $quantity) {
+            return redirect()->back()->with('error', 'Not enough product in stock. Available: ' . $product->amount);
+        }
+        
         $totalPrice = $product->price * $quantity;
         
         // Check if user has enough credit
@@ -105,6 +112,10 @@ class ProductsController extends Controller {
             if (!$user->deductCredit($totalPrice)) {
                 throw new \Exception('Failed to deduct credit from your account.');
             }
+            
+            // Reduce product amount
+            $product->amount -= $quantity;
+            $product->save();
             
             // Create purchase record
             Purchase::create([

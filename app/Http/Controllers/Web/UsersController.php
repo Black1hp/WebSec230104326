@@ -145,10 +145,28 @@ class UsersController extends Controller {
     public function delete(Request $request, User $user) {
 
         if(!auth()->user()->hasPermissionTo('delete_users')) abort(401);
-
-        //$user->delete();
-
-        return redirect()->route('users');
+        
+        // Don't allow deleting your own account
+        if(auth()->id() == $user->id) {
+            return redirect()->route('users')->with('error', 'You cannot delete your own account.');
+        }
+        
+        try {
+            // Start transaction
+            DB::beginTransaction();
+            
+            // Delete the user
+            $user->delete();
+            
+            // Commit transaction
+            DB::commit();
+            
+            return redirect()->route('users')->with('success', 'User deleted successfully.');
+        } catch (\Exception $e) {
+            // Rollback in case of error
+            DB::rollBack();
+            return redirect()->route('users')->with('error', 'Error deleting user: ' . $e->getMessage());
+        }
     }
 
     public function editPassword(Request $request, User $user = null) {
@@ -184,5 +202,61 @@ class UsersController extends Controller {
         $user->save();
 
         return redirect(route('profile', ['user'=>$user->id]));
+    }
+    
+    public function createEmployee(Request $request) {
+        // Check if user has admin permission
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(401);
+        }
+        
+        return view('users.create_employee');
+    }
+    
+    public function storeEmployee(Request $request) {
+        // Check if user has admin permission
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(401);
+        }
+        
+        // Validate input
+        try {
+            $this->validate($request, [
+                'name' => ['required', 'string', 'min:5'],
+                'email' => ['required', 'email', 'unique:users'],
+                'password' => ['required', 'confirmed', Password::min(8)->numbers()->letters()->mixedCase()->symbols()],
+            ]);
+        } catch(\Exception $e) {
+            return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
+                ->withErrors('Invalid employee information: ' . $e->getMessage());
+        }
+        
+        // Begin transaction
+        DB::beginTransaction();
+        
+        try {
+            // Create the employee user
+            $user = new User();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->password = bcrypt($request->password);
+            $user->credit = 0; // Employees have 0 credit by default
+            $user->save();
+            
+            // Assign the Employee role
+            $user->assignRole('Employee');
+            
+            // Commit the transaction
+            DB::commit();
+            
+            Artisan::call('cache:clear');
+            
+            return redirect()->route('users')->with('success', 'Employee created successfully!');
+        } catch (\Exception $e) {
+            // Rollback in case of error
+            DB::rollBack();
+            return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
+                ->withErrors('Error creating employee: ' . $e->getMessage());
+        }
     }
 } 

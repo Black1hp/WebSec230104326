@@ -74,7 +74,14 @@
                         <tr><th width="20%">Name</th><td>{{$product->name}}</td></tr>
                         <tr><th>Model</th><td>{{$product->model}}</td></tr>
                         <tr><th>Code</th><td>{{$product->code}}</td></tr>
-                        <tr><th>Price</th><td>{{$product->price}}</td>
+                        <tr><th>Price</th><td>{{$product->price}}</td></tr>
+                        <tr><th>Amount in Stock</th><td>
+                            @if($product->amount > 0)
+                                <span class="badge bg-success">{{$product->amount}} available</span>
+                            @else
+                                <span class="badge bg-danger">Out of stock</span>
+                            @endif
+                        </td></tr>
                         <tr><th>Description</th><td>{{$product->description}}</td></tr>
                     </table>
                     
@@ -84,8 +91,10 @@
                             <form action="{{ route('products_purchase', $product->id) }}" method="POST">
                                 @csrf
                                 <div class="input-group">
-                                    <input type="number" name="quantity" class="form-control" value="1" min="1">
-                                    <button type="submit" class="btn btn-primary">Purchase</button>
+                                    <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ $product->amount }}" {{ $product->amount <= 0 ? 'disabled' : '' }}>
+                                    <button type="submit" class="btn btn-primary" {{ $product->amount <= 0 ? 'disabled' : '' }}>
+                                        {{ $product->amount > 0 ? 'Purchase' : 'Out of Stock' }}
+                                    </button>
                                 </div>
                             </form>
                         </div>
