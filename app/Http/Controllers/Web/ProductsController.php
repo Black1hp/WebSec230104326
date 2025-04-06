@@ -41,8 +41,14 @@ class ProductsController extends Controller {
 	}
 
 	public function edit(Request $request, Product $product = null) {
-
 		if(!auth()->user()) return redirect('/');
+		
+		// Check if user has permission to edit products or is an Employee/Admin
+		if(!auth()->user()->hasPermissionTo('edit_products') && 
+		   !auth()->user()->hasRole('Employee') && 
+		   !auth()->user()->hasRole('Admin')) {
+		    abort(401, 'Unauthorized');
+		}
 
 		$product = $product??new Product();
 
@@ -50,6 +56,12 @@ class ProductsController extends Controller {
 	}
 
 	public function save(Request $request, Product $product = null) {
+	    // Check if user has permission to add/edit products or is an Employee/Admin
+		if(!auth()->user()->hasPermissionTo('edit_products') && 
+		   !auth()->user()->hasRole('Employee') && 
+		   !auth()->user()->hasRole('Admin')) {
+		    abort(401, 'Unauthorized');
+		}
 
 		$this->validate($request, [
 	        'code' => ['required', 'string', 'max:32'],
@@ -64,16 +76,33 @@ class ProductsController extends Controller {
 		$product->fill($request->all());
 		$product->save();
 
-		return redirect()->route('products_list');
+		return redirect()->route('products_list')->with('success', 'Product saved successfully!');
 	}
 
 	public function delete(Request $request, Product $product) {
-
-		if(!auth()->user()->hasPermissionTo('delete_products')) abort(401);
-
-		$product->delete();
-
-		return redirect()->route('products_list');
+		// Check if user has permission to delete products or is an Employee/Admin
+		if(!auth()->user()->hasPermissionTo('delete_products') && 
+		   !auth()->user()->hasRole('Employee') && 
+		   !auth()->user()->hasRole('Admin')) {
+		    abort(401, 'Unauthorized');
+		}
+		
+		try {
+		    // Start transaction
+		    DB::beginTransaction();
+		    
+		    // Delete the product
+		    $product->delete();
+		    
+		    // Commit transaction
+		    DB::commit();
+		    
+		    return redirect()->route('products_list')->with('success', 'Product deleted successfully.');
+		} catch (\Exception $e) {
+		    // Rollback in case of error
+		    DB::rollBack();
+		    return redirect()->route('products_list')->with('error', 'Error deleting product: ' . $e->getMessage());
+		}
 	}
 	
 	public function purchase(Request $request, Product $product) {

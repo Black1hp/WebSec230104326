@@ -18,7 +18,7 @@
                         <input type="password" class="form-control" placeholder="Old Password" name="old_password" required>
                     </div>
                 </div>
-            @endcan
+            @endif
 
             <div class="row mb-2">
                 <div class="col-12">

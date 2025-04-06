@@ -18,6 +18,12 @@
                     @endforeach
                 </td>
             </tr>
+            @if($user->hasRole('Customer'))
+            <tr>
+                <th>Credit Balance</th>
+                <td><span class="badge bg-success">{{$user->credit}}</span></td>
+            </tr>
+            @endif
             <tr>
                 <th>Permissions</th>
                 <td>
@@ -29,7 +35,10 @@
         </table>
 
         <div class="row">
-            <div class="col col-6">
+            <div class="col col-4">
+                @if($user->hasRole('Customer') && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Employee')))
+                <a class="btn btn-success" href='{{route('charge_credit', $user->id)}}'>Charge Credit</a>
+                @endif
             </div>
             @if(auth()->user()->hasPermissionTo('admin_users')||auth()->id()==$user->id)
             <div class="col col-4">

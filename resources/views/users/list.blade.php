@@ -11,6 +11,11 @@
         @endrole
     </div>
 </div>
+
+<div class="alert alert-info">
+    <p class="mb-0"><i class="fas fa-info-circle"></i> Note: Your account ({{ auth()->user()->name }}) is not shown in this list.</p>
+</div>
+
 <form>
     <div class="row">
         <div class="col col-sm-2">
@@ -34,6 +39,9 @@
           <th scope="col">Name</th>
           <th scope="col">Email</th>
           <th scope="col">Roles</th>
+          @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Employee'))
+          <th scope="col">Credit Balance</th>
+          @endif
           <th scope="col"></th>
         </tr>
       </thead>
@@ -47,6 +55,15 @@
             <span class="badge bg-primary">{{$role->name}}</span>
           @endforeach
         </td>
+        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Employee'))
+        <td scope="col">
+          @if($user->hasRole('Customer'))
+            <span class="badge bg-success">${{ number_format($user->credit, 2) }}</span>
+          @else
+            <span>-</span>
+          @endif
+        </td>
+        @endif
         <td scope="col">
           @can('edit_users')
           <a class="btn btn-primary" href='{{route('users_edit', [$user->id])}}'>Edit</a>
@@ -54,8 +71,16 @@
           @can('admin_users')
           <a class="btn btn-primary" href='{{route('edit_password', [$user->id])}}'>Change Password</a>
           @endcan
+          @if($user->hasRole('Customer'))
+          <a class="btn btn-info" href='{{route('user_purchases', [$user->id])}}'>Purchases</a>
+          @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Employee'))
+          <a class="btn btn-success" href='{{route('charge_credit', [$user->id])}}'>Charge Credit</a>
+          @endif
+          @endif
           @can('delete_users')
+          @if(!($user->hasRole('Admin') && auth()->user()->hasRole('Admin')))
           <a class="btn btn-danger" href='#' onclick="confirmDelete({{ $user->id }}, '{{ $user->name }}')">Delete</a>
+          @endif
           @endcan
         </td>
       </tr>
