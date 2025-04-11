@@ -49,6 +49,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'credit' => 'decimal:2',
+            'last_gift_given_at' => 'datetime',
         ];
     }
 

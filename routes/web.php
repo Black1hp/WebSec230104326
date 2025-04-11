@@ -21,6 +21,7 @@ Route::post('users/store_employee', [UsersController::class, 'storeEmployee'])->
 Route::get('users/purchases/{user}', [UsersController::class, 'userPurchases'])->name('user_purchases');
 Route::get('users/charge_credit/{user}', [UsersController::class, 'chargeCredit'])->name('charge_credit');
 Route::post('users/save_credit/{user}', [UsersController::class, 'saveCredit'])->name('save_credit');
+Route::post('users/give-gift/{user}', [UsersController::class, 'giveGift'])->name('give_gift');
 
 Route::get('products', [ProductsController::class, 'list'])->name('products_list');
 Route::get('products/edit/{product?}', [ProductsController::class, 'edit'])->name('products_edit');
