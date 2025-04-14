@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationEmail;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Password as PasswordFacade;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -159,6 +162,113 @@ class UsersController extends Controller {
     	Auth::logout();
 
         return redirect('/');
+    }
+
+    public function forgotPassword() {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request) {
+        $request->validate([
+            'email' => ['required', 'email', 'exists:users,email']
+        ], [
+            'email.exists' => 'If your email exists in our system, you will receive a password reset link shortly.'
+        ]);
+
+        // Clean up old tokens for this email
+        DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('created_at', '<', now()->subHours(1))
+            ->delete();
+
+        $status = PasswordFacade::sendResetLink(
+            $request->only('email')
+        );
+
+        // Always return the same message to prevent user enumeration
+        return back()->with('status', 'If your email exists in our system, you will receive a password reset link shortly.');
+    }
+
+    public function showResetForm(Request $request, string $token) {
+        // For password reset links, the email is passed as a query parameter
+        if (!$request->has('email')) {
+            return redirect()->route('password.request')
+                ->with('error', 'Invalid password reset link.');
+        }
+
+        // Don't hash the token here - Laravel's Password facade already handles this
+        // Just check if a record exists with this email
+        $tokenRecord = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$tokenRecord || now()->subHours(1)->gt($tokenRecord->created_at)) {
+            return redirect()->route('password.request')
+                ->with('error', 'This password reset link has expired or is invalid.');
+        }
+        
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->email
+        ]);
+    }
+
+    public function resetPassword(Request $request) {
+        $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email', 'exists:users,email'],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:8',
+                'regex:/[a-z]/',      // at least one lowercase letter
+                'regex:/[A-Z]/',      // at least one uppercase letter
+                'regex:/[0-9]/',      // at least one number
+                'regex:/[@$!%*#?&]/', // at least one special character
+            ],
+        ], [
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            'password.min' => 'Password must be at least 8 characters long.',
+            'password.confirmed' => 'Password confirmation does not match.'
+        ]);
+
+        // Check if the new password is the same as the old one before resetting
+        $user = User::where('email', $request->email)->first();
+        if ($user && Hash::check($request->password, $user->password)) {
+            return back()->withErrors([
+                'password' => 'New password cannot be the same as your old password.'
+            ])->withInput($request->except('password', 'password_confirmation'));
+        }
+
+        // Let Laravel's Password facade handle the token validation
+        $status = PasswordFacade::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user) use ($request) {
+                $user->forceFill([
+                    'password' => Hash::make($request->password),
+                    'remember_token' => \Illuminate\Support\Str::random(60),
+                ])->save();
+
+                // Log out all other sessions for this user
+                DB::table('sessions')
+                    ->where('user_id', $user->id)
+                    ->delete();
+
+                // Clean up used token
+                DB::table('password_reset_tokens')
+                    ->where('email', $user->email)
+                    ->delete();
+
+                event(new \Illuminate\Auth\Events\PasswordReset($user));
+            }
+        );
+
+        if ($status === PasswordFacade::PASSWORD_RESET) {
+            return redirect()->route('login')
+                ->with('status', 'Your password has been reset successfully. You can now log in with your new password.');
+        }
+
+        return back()->withErrors(['email' => __($status)]);
     }
 
     public function profile(Request $request, User $user = null) {
