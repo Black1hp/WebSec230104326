@@ -9,6 +9,10 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use DB;
 use Artisan;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationEmail;
+use Carbon\Carbon;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -67,45 +71,56 @@ class UsersController extends Controller {
     }
 
     public function doRegister(Request $request) {
-
-    	try {
-    		$this->validate($request, [
-	        'name' => ['required', 'string', 'min:5'],
-	        'email' => ['required', 'email', 'unique:users'],
-	        'password' => ['required', 'confirmed', Password::min(8)->numbers()->letters()->mixedCase()->symbols()],
-	    	]);
-    	}
-    	catch(\Exception $e) {
-
-    		return redirect()->back()->withInput($request->input())->withErrors('Invalid registration information.');
-    	}
+        try {
+            $this->validate($request, [
+                'name' => ['required', 'string', 'min:3'],
+                'email' => ['required', 'email', 'unique:users'],
+                'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+            ], [
+                'name.required' => 'Name is required',
+                'name.min' => 'Name must be at least 3 characters',
+                'email.required' => 'Email is required',
+                'email.email' => 'Please enter a valid email address',
+                'email.unique' => 'This email is already registered',
+                'password.required' => 'Password is required',
+                'password.confirmed' => 'Passwords do not match',
+                'password.min' => 'Password must be at least 8 characters',
+            ]);
+        }
+        catch(\Exception $e) {
+            return redirect()->back()
+                ->withInput($request->input())
+                ->withErrors($e->getMessage());
+        }
 
         // Begin transaction
         DB::beginTransaction();
 
         try {
-        	// Create the user
-        	$user = new User();
-    	    $user->name = $request->name;
-    	    $user->email = $request->email;
-    	    $user->password = bcrypt($request->password); //Secure
-    	    $user->credit = 0; // Default credit for new customers
-    	    $user->save();
+            // Create the user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'credit' => 0
+            ]);
 
-    	    // Assign Customer role (ID: 3)
-    	    $user->assignRole('Customer');
+            // Assign Customer role
+            $user->assignRole('Customer');
 
-    	    // Commit the transaction
-    	    DB::commit();
+            // Send verification email using Laravel's built-in verification
+            event(new \Illuminate\Auth\Events\Registered($user));
 
-    	    // Clear permission cache
-    	    Artisan::call('cache:clear');
+            // Commit transaction
+            DB::commit();
 
-    	    return redirect('/')->with('success', 'Registration successful! You can now log in.');
-        } catch (\Exception $e) {
-            // Rollback in case of error
+            return redirect()->route('login')
+                ->with('success', 'Registration successful! Please check your email to verify your account before logging in.');
+        }
+        catch(\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
+            return redirect()->back()
+                ->withInput($request->input())
                 ->withErrors('Registration failed: ' . $e->getMessage());
         }
     }
@@ -115,14 +130,28 @@ class UsersController extends Controller {
     }
 
     public function doLogin(Request $request) {
+        $credentials = $request->only('email', 'password');
+        
+        if (!Auth::attempt($credentials)) {
+            return redirect()->back()
+                ->withInput($request->only('email'))
+                ->withErrors('Invalid login information.');
+        }
 
-    	if(!Auth::attempt(['email' => $request->email, 'password' => $request->password]))
-            return redirect()->back()->withInput($request->input())->withErrors('Invalid login information.');
+        $user = Auth::user();
+        
+        if (!$user->hasVerifiedEmail()) {
+            Auth::logout();
+            
+            // Resend verification email
+            $user->sendEmailVerificationNotification();
+            
+            return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->with('error', 'Your email is not verified. A new verification link has been sent to your email address.');
+        }
 
-        $user = User::where('email', $request->email)->first();
-        Auth::setUser($user);
-
-        return redirect('/');
+        return redirect()->intended('/');
     }
 
     public function doLogout(Request $request) {
