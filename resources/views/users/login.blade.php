@@ -25,6 +25,12 @@
         <button type="submit" class="btn btn-primary">Login</button>
         <a href="{{ route('password.request') }}" class="btn btn-link">Forgot Your Password?</a>
       </div>
+      <div class="form-group mb-2">
+        <p class="text-center">Or</p>
+        <a href="{{ route('login_with_google') }}" class="btn btn-danger w-100">
+          <i class="fab fa-google"></i> Login with Google
+        </a>
+      </div>
     </form>
     </div>
   </div>

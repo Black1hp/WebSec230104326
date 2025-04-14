@@ -15,6 +15,10 @@ Route::get('login', [UsersController::class, 'login'])->name('login');
 Route::post('login', [UsersController::class, 'doLogin'])->name('do_login');
 Route::get('logout', [UsersController::class, 'doLogout'])->name('do_logout');
 
+// Google Authentication Routes
+Route::get('/auth/google', [UsersController::class, 'redirectToGoogle'])->name('login_with_google');
+Route::get('/auth/google/callback', [UsersController::class, 'handleGoogleCallback'])->name('google.callback');
+
 // Email Verification Routes
 Route::get('/email/verify', function () {
     if (!auth()->check()) {

@@ -9,6 +9,7 @@
         "php": "^8.2",
         "jdecool/ollama-client": "dev-main",
         "laravel/framework": "^11.31",
+        "laravel/socialite": "^5.19",
         "laravel/tinker": "*",
         "spatie/laravel-permission": "^6.16"
     },

@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Password as PasswordFacade;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -621,5 +622,48 @@ class UsersController extends Controller {
         $user->save();
 
         return redirect()->route('users')->with('success', 'Gift of 1,000 coins given to ' . $user->name . '.');
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            
+            $user = User::where('email', $googleUser->email)->first();
+            
+            if (!$user) {
+                // Create new user
+                $user = User::create([
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'google_id' => $googleUser->id,
+                    'google_token' => $googleUser->token,
+                    'google_refresh_token' => $googleUser->refreshToken,
+                    'password' => bcrypt(Str::random(16)), // Random password for Google users
+                ]);
+                
+                // Assign Customer role
+                $user->assignRole('Customer');
+            } else {
+                // Update existing user's Google info
+                $user->update([
+                    'google_id' => $googleUser->id,
+                    'google_token' => $googleUser->token,
+                    'google_refresh_token' => $googleUser->refreshToken,
+                ]);
+            }
+            
+            Auth::login($user);
+            
+            return redirect('/');
+        } catch (\Exception $e) {
+            return redirect()->route('login')
+                ->with('error', 'Google authentication failed: ' . $e->getMessage());
+        }
     }
 }
