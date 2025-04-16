@@ -50,7 +50,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'credit' => 'decimal:2',
-        'last_gift_given_at' => 'datetime',
     ];
 
     /**
@@ -59,6 +58,22 @@ class User extends Authenticatable implements MustVerifyEmail
     public function purchases()
     {
         return $this->hasMany(Purchase::class);
+    }
+
+    /**
+     * Get the gifts given by the user.
+     */
+    public function givenGifts()
+    {
+        return $this->hasMany(Gift::class, 'giver_id');
+    }
+
+    /**
+     * Get the gifts received by the user.
+     */
+    public function receivedGifts()
+    {
+        return $this->hasMany(Gift::class, 'receiver_id');
     }
 
     /**

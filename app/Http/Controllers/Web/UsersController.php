@@ -20,6 +20,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Gift;
 
 class UsersController extends Controller {
 
@@ -611,17 +612,39 @@ class UsersController extends Controller {
         }
 
         // Check if a gift has already been given within the last 30 days
-        $lastGiftGivenAt = $user->last_gift_given_at;
-        if ($lastGiftGivenAt && $lastGiftGivenAt->diffInDays(now()) < 30) {
+        $lastGift = Gift::where('receiver_id', $user->id)
+            ->where('gift_given_at', '>', now()->subDays(30))
+            ->first();
+
+        if ($lastGift) {
             return redirect()->route('users')->with('error', 'A gift has already been given to this user within the last 30 days.');
         }
 
-        // Add 1,000 coins to the user's account
-        $user->credit += 1000;
-        $user->last_gift_given_at = now();
-        $user->save();
+        // Start transaction
+        DB::beginTransaction();
 
-        return redirect()->route('users')->with('success', 'Gift of 1,000 coins given to ' . $user->name . '.');
+        try {
+            // Create gift record
+            Gift::create([
+                'giver_id' => auth()->id(),
+                'receiver_id' => $user->id,
+                'amount' => 1000,
+                'gift_given_at' => now()
+            ]);
+
+            // Add credit to user
+            $user->credit += 1000;
+            $user->save();
+
+            // Commit transaction
+            DB::commit();
+
+            return redirect()->route('users')->with('success', 'Gift of 1,000 coins given to ' . $user->name . '.');
+        } catch (\Exception $e) {
+            // Rollback in case of error
+            DB::rollBack();
+            return redirect()->route('users')->with('error', 'Error giving gift: ' . $e->getMessage());
+        }
     }
 
     public function redirectToGoogle()

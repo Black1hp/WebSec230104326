@@ -88,16 +88,9 @@
                                     <a class="btn btn-danger" href='#' onclick="confirmDelete({{ $user->id }}, '{{ $user->name }}')">Delete</a>
                                 @endif
                             @endcan
-
                         </td>
                     </tr>
                 @endforeach
-                <a class="btn btn-success" href='{{route('give_gift', [$user->id])}}'>Give a Gift</a>
-                @if($user->hasRole('Customer'))
-                    @if(auth()->user()->hasRole('manage_sales'))
-                        <a class="btn btn-success" href='{{route('give_gift', [$user->id])}}'>Give a Gift</a>
-                    @endif
-                @endif
             </table>
         </div>
     </div>
