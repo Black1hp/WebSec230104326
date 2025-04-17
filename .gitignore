@@ -21,7 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-/WebSec230104326
 
 # OS specific files
 .DS_Store
@@ -31,7 +30,6 @@ Thumbs.db
 *.log
 *.sql
 *.sqlite
-/database
 
 # Local configuration files
 *.local.php
@@ -46,6 +44,3 @@ _ide_helper*.php
 
 # Laravel backups
 /storage/app/backups
-
-
-

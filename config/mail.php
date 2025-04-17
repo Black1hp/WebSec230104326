@@ -14,11 +14,7 @@ return [
     |
     */
 
-<<<<<<< HEAD
-    'default' => env('MAIL_MAILER', 'log'),
-=======
     'default' => env('MAIL_MAILER', 'smtp'),
->>>>>>> Midterm-v2
 
     /*
     |--------------------------------------------------------------------------

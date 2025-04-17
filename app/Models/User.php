@@ -2,17 +2,6 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-
-
-class User extends Authenticatable
-{
-
-=======
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,7 +12,6 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasRoles;
->>>>>>> Midterm-v2
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -37,14 +25,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-<<<<<<< HEAD
-        'role',  // Add this line
-=======
         'credit',
         'google_id',
         'google_token',
         'google_refresh_token',
->>>>>>> Midterm-v2
     ];
 
     /**
@@ -62,14 +46,6 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @return array<string, string>
      */
-<<<<<<< HEAD
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-=======
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -119,6 +95,5 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
         return false;
->>>>>>> Midterm-v2
     }
 }

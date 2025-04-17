@@ -15,13 +15,6 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-<<<<<<< HEAD
-        $this->call([
-            RoleSeeder::class,
-        ]);
-
-=======
->>>>>>> Midterm-v2
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
