@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @extends('layouts.app')
 @section('title', 'Welcome')
 @section('content')
@@ -47,4 +48,14 @@
             });
         });
     </script>
+=======
+@extends('layouts.master')
+@section('title', 'Welcome')
+@section('content')
+    <div class="card m-4">
+      <div class="card-body">
+        Welcome to Home Page
+      </div>
+    </div>
+>>>>>>> Midterm-v2
 @endsection

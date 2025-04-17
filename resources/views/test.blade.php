@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @extends('layouts.app')
 @section('title', 'Test Page')
 @section('content')
@@ -15,3 +16,10 @@ just stest Page
 </body>
 </html>
 @endsection
+=======
+@extends('layouts.master')
+@section('title', 'Test Page')
+@section('content')
+<p>Hello</p>
+@endsection
+>>>>>>> Midterm-v2

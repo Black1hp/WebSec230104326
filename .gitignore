@@ -22,3 +22,30 @@ yarn-error.log
 /.vscode
 /.zed
 /WebSec230104326
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+/database
+
+# Local configuration files
+*.local.php
+local-config.php
+
+# Composer
+composer.phar
+
+# PHPStorm project files
+.phpstorm.meta.php
+_ide_helper*.php
+
+# Laravel backups
+/storage/app/backups
+
+
+
