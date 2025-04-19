@@ -83,6 +83,41 @@
                             @endif
                         </td></tr>
                         <tr><th>Description</th><td>{{$product->description}}</td></tr>
+                        <tr>
+                            <th>Likes</th>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-danger me-2">
+                                        <i class="bi bi-heart-fill"></i> {{ $product->likes_count }}
+                                    </span>
+                                    @auth
+                                        @role('Customer')
+                                            @if($product->isLikedByUser())
+                                                <form action="{{ route('product_toggle_like', ['product' => $product->id]) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-heart-fill"></i> Liked
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <form action="{{ route('product_toggle_like', ['product' => $product->id]) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-heart"></i> Like
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @else
+                                            @if($product->isLikedByUser())
+                                                <span class="text-success small">
+                                                    <i class="bi bi-check-circle-fill"></i> You liked this
+                                                </span>
+                                            @endif
+                                        @endrole
+                                    @endauth
+                                </div>
+                            </td>
+                        </tr>
                     </table>
                     
                     @role('Customer')

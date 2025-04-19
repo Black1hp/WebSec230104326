@@ -26,6 +26,7 @@
                             <th>Total Price</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Like</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -41,6 +42,25 @@
                                     <span class="badge {{ $purchase->status == 'completed' ? 'bg-success' : ($purchase->status == 'returned' ? 'bg-info' : ($purchase->status == 'pending' ? 'bg-warning' : 'bg-danger')) }}">
                                         {{ ucfirst($purchase->status) }}
                                     </span>
+                                </td>
+                                <td>
+                                    @if($purchase->liked)
+                                        <form action="{{ route('products_toggle_like', ['purchase' => $purchase->id]) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-heart-fill"></i> Liked
+                                            </button>
+                                        </form>
+                                    @elseif($purchase->status == 'completed' || ($purchase->status == 'returned' && $purchase->liked))
+                                        <form action="{{ route('products_toggle_like', ['purchase' => $purchase->id]) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-heart"></i> Like
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-muted"><i class="bi bi-heart"></i> Not available</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($purchase->status == 'completed')

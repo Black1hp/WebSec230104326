@@ -196,6 +196,118 @@ class ProductsController extends Controller {
     }
     
     /**
+     * Toggle the liked status for a purchase
+     * Ensures user can only like a product once, regardless of purchase count
+     */
+    public function toggleLike(Request $request, Purchase $purchase) {
+        // Ensure that the purchase belongs to the current user
+        if (Auth::id() !== $purchase->user_id) {
+            return redirect()->back()->with('error', 'You can only like products you have purchased.');
+        }
+        
+        // Cannot like a returned product if it wasn't already liked
+        if ($purchase->status === 'returned' && !$purchase->liked) {
+            return redirect()->back()->with('error', 'You cannot like a product after returning it.');
+        }
+        
+        if ($purchase->liked) {
+            // Unliking: Set this purchase to unliked
+            $purchase->liked = false;
+            $purchase->save();
+            
+            // Also update any other purchases of this product by this user for consistency
+            Purchase::where('user_id', Auth::id())
+                ->where('product_id', $purchase->product_id)
+                ->where('id', '!=', $purchase->id)
+                ->where('liked', true)
+                ->update(['liked' => false]);
+                
+            return redirect()->back()->with('success', 'You have unliked the product.');
+        } else {
+            // Liking: First, unlike any other purchases of this product
+            Purchase::where('user_id', Auth::id())
+                ->where('product_id', $purchase->product_id)
+                ->where('liked', true)
+                ->update(['liked' => false]);
+            
+            // Then set this purchase to liked
+            $purchase->liked = true;
+            $purchase->save();
+            
+            return redirect()->back()->with('success', 'You have liked the product.');
+        }
+    }
+    
+    /**
+     * Like or unlike a product directly from the product list
+     * Prevents multiple likes of the same product by a single user
+     */
+    public function toggleProductLike(Request $request, Product $product) {
+        // Check if user is logged in
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please log in to like products.');
+        }
+        
+        // Check if user has Customer role
+        $user = Auth::user();
+        if (!$user->hasRole('Customer')) {
+            return redirect()->back()->with('error', 'Only customers can like products.');
+        }
+        
+        // First, check if the user has already liked this product
+        $existingLike = Purchase::where('user_id', Auth::id())
+                      ->where('product_id', $product->id)
+                      ->where('liked', true)
+                      ->first();
+        
+        if ($existingLike) {
+            // User has already liked the product, so unlike it
+            $existingLike->liked = false;
+            $existingLike->save();
+            
+            // Also unlike any other purchases of this product by this user (for consistency)
+            Purchase::where('user_id', Auth::id())
+                ->where('product_id', $product->id)
+                ->where('liked', true)
+                ->where('id', '!=', $existingLike->id)
+                ->update(['liked' => false]);
+            
+            return redirect()->back()->with('success', 'You have unliked this product.');
+        }
+        
+        // Find the user's most recent non-returned purchase or most recent purchase if all are returned
+        $purchase = Purchase::where('user_id', Auth::id())
+                  ->where('product_id', $product->id)
+                  ->where('status', '!=', 'returned')
+                  ->orderBy('created_at', 'desc')
+                  ->first();
+        
+        // If no active purchase found, get any purchase including returned ones
+        if (!$purchase) {
+            $purchase = Purchase::where('user_id', Auth::id())
+                      ->where('product_id', $product->id)
+                      ->orderBy('created_at', 'desc')
+                      ->first();
+        }
+        
+        // Check if user has purchased this product
+        if (!$purchase) {
+            return redirect()->back()->with('error', 'You can only like products you have purchased.');
+        }
+        
+        // Cannot like a returned product if it wasn't already liked
+        if ($purchase->status === 'returned') {
+            return redirect()->back()->with('error', 'You cannot like a product after returning it.');
+        }
+        
+        // Set liked to true
+        $purchase->liked = true;
+        $purchase->save();
+        
+        return redirect()->back()->with('success', 'You have liked this product.');
+    }
+    
+    /**
      * Return a purchased product
      * Adds the product back to stock and refunds the user's credit
      */
@@ -291,8 +403,19 @@ class ProductsController extends Controller {
             $user->credit += $purchase->total_price;
             $user->save();
             
-            // Update purchase status to 'returned'
+            // Update purchase status to 'returned' and remove any like
             $purchase->status = 'returned';
+            
+            // If the purchase was liked, unlike it
+            if ($purchase->liked) {
+                $purchase->liked = false;
+                \Log::info('Like removed due to product return', [
+                    'user_id' => $user->id,
+                    'product_id' => $product->id,
+                    'purchase_id' => $purchase->id
+                ]);
+            }
+            
             $purchase->save();
             
             // Log successful return for audit

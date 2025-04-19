@@ -11,7 +11,12 @@ class Purchase extends Model
         'product_id',
         'quantity',
         'total_price',
-        'status'
+        'status',
+        'liked'
+    ];
+    
+    protected $casts = [
+        'liked' => 'boolean',
     ];
 
     /**
