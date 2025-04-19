@@ -86,6 +86,7 @@ Route::post('products/save/{product?}', [ProductsController::class, 'save'])->na
 Route::get('products/delete/{product}', [ProductsController::class, 'delete'])->name('products_delete');
 Route::post('products/purchase/{product}', [ProductsController::class, 'purchase'])->name('products_purchase');
 Route::get('my-purchases', [ProductsController::class, 'myPurchases'])->name('my_purchases');
+Route::post('products/return/{purchase}', [ProductsController::class, 'returnProduct'])->name('products_return');
 
 Route::get('/', function () {
     return view('welcome');

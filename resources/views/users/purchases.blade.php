@@ -28,6 +28,7 @@
                             <th>Total Price</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,9 +42,21 @@
                                 <td>{{ $purchase->total_price }}</td>
                                 <td>{{ date('Y-m-d H:i', strtotime($purchase->created_at)) }}</td>
                                 <td>
-                                    <span class="badge {{ $purchase->status == 'completed' ? 'bg-success' : ($purchase->status == 'pending' ? 'bg-warning' : 'bg-danger') }}">
+                                    <span class="badge {{ $purchase->status == 'completed' ? 'bg-success' : ($purchase->status == 'returned' ? 'bg-info' : ($purchase->status == 'pending' ? 'bg-warning' : 'bg-danger')) }}">
                                         {{ ucfirst($purchase->status) }}
                                     </span>
+                                </td>
+                                <td>
+                                    @if($purchase->status == 'completed' && (auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Admin')))
+                                        <form action="{{ route('products_return', ['purchase' => $purchase->id]) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to return this product for {{ $user->name }}? This will refund their credit and add the product back to stock.')">
+                                                Process Return
+                                            </button>
+                                        </form>
+                                    @elseif($purchase->status == 'returned')
+                                        <span class="text-muted">Returned</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

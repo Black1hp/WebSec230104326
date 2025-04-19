@@ -26,6 +26,7 @@
                             <th>Total Price</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,9 +38,21 @@
                                 <td>{{ $purchase->total_price }}</td>
                                 <td>{{ $purchase->created_at->format('Y-m-d H:i') }}</td>
                                 <td>
-                                    <span class="badge {{ $purchase->status == 'completed' ? 'bg-success' : ($purchase->status == 'pending' ? 'bg-warning' : 'bg-danger') }}">
+                                    <span class="badge {{ $purchase->status == 'completed' ? 'bg-success' : ($purchase->status == 'returned' ? 'bg-info' : ($purchase->status == 'pending' ? 'bg-warning' : 'bg-danger')) }}">
                                         {{ ucfirst($purchase->status) }}
                                     </span>
+                                </td>
+                                <td>
+                                    @if($purchase->status == 'completed')
+                                        <form action="{{ route('products_return', ['purchase' => $purchase->id]) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to return this product? This will refund your credit and add the product back to stock.')">
+                                                Return
+                                            </button>
+                                        </form>
+                                    @elseif($purchase->status == 'returned')
+                                        <span class="text-muted">Returned</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

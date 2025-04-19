@@ -18,6 +18,10 @@ class ProductsController extends Controller {
     {
         $this->middleware('auth:web')->except('list');
     }
+    
+    /**
+     * Return a purchased product - increase stock and refund credit
+     */
 
 	public function list(Request $request) {
 
@@ -189,5 +193,60 @@ class ProductsController extends Controller {
             'purchases' => $purchases,
             'user' => $user
         ]);
+    }
+    
+    /**
+     * Return a purchased product
+     * Adds the product back to stock and refunds the user's credit
+     */
+    public function returnProduct(Request $request, Purchase $purchase) {
+        // Start transaction
+        DB::beginTransaction();
+        
+        try {
+            // Verify if user has permission to return the product
+            // Either the purchase belongs to the user or the user is an employee/admin
+            $isOwnPurchase = Auth::id() === $purchase->user_id;
+            $canReturnForOthers = Auth::user()->hasRole('Employee') || Auth::user()->hasRole('Admin');
+            
+            if (!$isOwnPurchase && !$canReturnForOthers) {
+                return redirect()->back()->with('error', 'You do not have permission to return this product.');
+            }
+            
+            // Check if the purchase is already returned
+            if ($purchase->status === 'returned') {
+                return redirect()->back()->with('error', 'This product has already been returned.');
+            }
+            
+            // Check if the product still exists in the database
+            $product = $purchase->product;
+            if (!$product) {
+                return redirect()->back()->with('error', 'The purchased product no longer exists in the system.');
+            }
+            
+            // Get the user who made the purchase
+            $user = $purchase->user;
+            
+            // Add the product back to stock
+            $product->amount += $purchase->quantity;
+            $product->save();
+            
+            // Refund the user
+            $user->credit += $purchase->total_price;
+            $user->save();
+            
+            // Update purchase status to 'returned'
+            $purchase->status = 'returned';
+            $purchase->save();
+            
+            // Commit transaction
+            DB::commit();
+            
+            return redirect()->back()->with('success', 'Product returned successfully. Credit refunded: ' . $purchase->total_price);
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Return failed: ' . $e->getMessage());
+        }
     }
 }
