@@ -200,6 +200,17 @@ class ProductsController extends Controller {
      * Adds the product back to stock and refunds the user's credit
      */
     public function returnProduct(Request $request, Purchase $purchase) {
+        // Verify the CSRF token is valid
+        if (!$request->hasValidSignature() && env('APP_ENV') === 'production') {
+            // Log potential CSRF attempt
+            \Log::warning('Potential CSRF attempt detected in product return', [
+                'ip' => $request->ip(),
+                'user_id' => Auth::id(),
+                'purchase_id' => $purchase->id
+            ]);
+            return redirect()->back()->with('error', 'Security validation failed. Please try again.');
+        }
+        
         // Start transaction
         DB::beginTransaction();
         
@@ -210,12 +221,27 @@ class ProductsController extends Controller {
             $canReturnForOthers = Auth::user()->hasRole('Employee') || Auth::user()->hasRole('Admin');
             
             if (!$isOwnPurchase && !$canReturnForOthers) {
+                // Log unauthorized access attempt
+                \Log::warning('Unauthorized return attempt', [
+                    'user_id' => Auth::id(),
+                    'attempted_purchase_id' => $purchase->id,
+                    'purchase_owner_id' => $purchase->user_id
+                ]);
                 return redirect()->back()->with('error', 'You do not have permission to return this product.');
             }
             
-            // Check if the purchase is already returned
+            // Check if the purchase is already returned or older than 30 days
             if ($purchase->status === 'returned') {
                 return redirect()->back()->with('error', 'This product has already been returned.');
+            }
+            
+            // Validate return time window (30 days)
+            $purchaseDate = new \DateTime($purchase->created_at);
+            $now = new \DateTime();
+            $daysSincePurchase = $purchaseDate->diff($now)->days;
+            
+            if ($daysSincePurchase > 30 && !$canReturnForOthers) {
+                return redirect()->back()->with('error', 'Returns are only allowed within 30 days of purchase. Please contact an employee for assistance.');
             }
             
             // Check if the product still exists in the database
@@ -224,8 +250,38 @@ class ProductsController extends Controller {
                 return redirect()->back()->with('error', 'The purchased product no longer exists in the system.');
             }
             
+            // Validate quantity is positive and not manipulated
+            if ($purchase->quantity <= 0 || $purchase->quantity > 1000) {
+                // Log potential data tampering
+                \Log::warning('Invalid quantity in return request', [
+                    'user_id' => Auth::id(),
+                    'purchase_id' => $purchase->id,
+                    'quantity' => $purchase->quantity
+                ]);
+                return redirect()->back()->with('error', 'Invalid quantity detected.');
+            }
+            
+            // Validate total_price makes sense for the quantity
+            $expectedPrice = $product->price * $purchase->quantity;
+            $priceDifference = abs($expectedPrice - $purchase->total_price);
+            $allowedVariance = $expectedPrice * 0.01; // 1% variance allowed for historical price changes
+            
+            if ($priceDifference > $allowedVariance) {
+                // Log potential price manipulation
+                \Log::warning('Price manipulation detected in return', [
+                    'user_id' => Auth::id(),
+                    'purchase_id' => $purchase->id,
+                    'expected_price' => $expectedPrice,
+                    'actual_price' => $purchase->total_price
+                ]);
+                return redirect()->back()->with('error', 'Invalid price data detected.');
+            }
+            
             // Get the user who made the purchase
             $user = $purchase->user;
+            if (!$user) {
+                return redirect()->back()->with('error', 'The user account associated with this purchase no longer exists.');
+            }
             
             // Add the product back to stock
             $product->amount += $purchase->quantity;
@@ -239,6 +295,15 @@ class ProductsController extends Controller {
             $purchase->status = 'returned';
             $purchase->save();
             
+            // Log successful return for audit
+            \Log::info('Product returned successfully', [
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'purchase_id' => $purchase->id,
+                'refund_amount' => $purchase->total_price,
+                'processed_by' => Auth::id()
+            ]);
+            
             // Commit transaction
             DB::commit();
             
@@ -246,6 +311,15 @@ class ProductsController extends Controller {
         } catch (\Exception $e) {
             // Rollback transaction on error
             DB::rollBack();
+            
+            // Log the exception
+            \Log::error('Return failed with exception', [
+                'user_id' => Auth::id(),
+                'purchase_id' => $purchase->id,
+                'error' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+            
             return redirect()->back()->with('error', 'Return failed: ' . $e->getMessage());
         }
     }
