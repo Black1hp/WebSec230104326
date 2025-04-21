@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Password as PasswordFacade;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Http;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -76,6 +77,21 @@ class UsersController extends Controller {
     }
 
     public function doRegister(Request $request) {
+        // Cloudflare Turnstile CAPTCHA validation
+        $turnstileResponse = $request->input('cf-turnstile-response');
+        if (!$turnstileResponse) {
+            return redirect()->back()->withInput($request->input())->withErrors(['captcha' => 'Please complete the CAPTCHA.']);
+        }
+        $cfSecret = env('CF_TURNSTILE_SECRET');
+        $verifyResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret' => $cfSecret,
+            'response' => $turnstileResponse,
+            'remoteip' => $request->ip(),
+        ]);
+        $verifyBody = $verifyResponse->json();
+        if (!($verifyBody['success'] ?? false)) {
+            return redirect()->back()->withInput($request->input())->withErrors(['captcha' => 'CAPTCHA validation failed. Please try again.']);
+        }
         try {
             $this->validate($request, [
                 'name' => ['required', 'string', 'min:3'],
@@ -124,9 +140,10 @@ class UsersController extends Controller {
         }
         catch(\Exception $e) {
             DB::rollBack();
+            \Log::error('Registration failed', ['exception' => $e]);
             return redirect()->back()
                 ->withInput($request->input())
-                ->withErrors('Registration failed: ' . $e->getMessage());
+                ->withErrors('Registration failed. Please try again or contact support.');
         }
     }
 
@@ -399,7 +416,8 @@ class UsersController extends Controller {
         } catch (\Exception $e) {
             // Rollback in case of error
             DB::rollBack();
-            return redirect()->route('users')->with('error', 'Error deleting user: ' . $e->getMessage());
+            \Log::error('Error deleting user', ['exception' => $e]);
+            return redirect()->route('users')->with('error', 'Error deleting user. Please try again or contact support.');
         }
     }
 
@@ -486,7 +504,7 @@ class UsersController extends Controller {
             ]);
         } catch(\Exception $e) {
             return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
-                ->withErrors('Invalid employee information: ' . $e->getMessage());
+                ->withErrors('Invalid employee information. Please try again or contact support.');
         }
 
         // Begin transaction
@@ -513,8 +531,9 @@ class UsersController extends Controller {
         } catch (\Exception $e) {
             // Rollback in case of error
             DB::rollBack();
+            \Log::error('Error creating employee', ['exception' => $e]);
             return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
-                ->withErrors('Error creating employee: ' . $e->getMessage());
+                ->withErrors('Error creating employee. Please try again or contact support.');
         }
     }
 
@@ -602,7 +621,8 @@ class UsersController extends Controller {
             // Rollback in case of error
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Error adding credit: ' . $e->getMessage());
+            \Log::error('Error adding credit', ['exception' => $e]);
+            return redirect()->back()->with('error', 'Error adding credit. Please try again or contact support.');
         }
     }
     public function giveGift(Request $request, User $user) {
@@ -643,7 +663,8 @@ class UsersController extends Controller {
         } catch (\Exception $e) {
             // Rollback in case of error
             DB::rollBack();
-            return redirect()->route('users')->with('error', 'Error giving gift: ' . $e->getMessage());
+            \Log::error('Error giving gift', ['exception' => $e]);
+            return redirect()->route('users')->with('error', 'Error giving gift. Please try again or contact support.');
         }
     }
 
@@ -685,8 +706,9 @@ class UsersController extends Controller {
             
             return redirect('/');
         } catch (\Exception $e) {
+            \Log::error('Google authentication failed', ['exception' => $e]);
             return redirect()->route('login')
-                ->with('error', 'Google authentication failed: ' . $e->getMessage());
+                ->with('error', 'Google authentication failed. Please try again or contact support.');
         }
     }
 }

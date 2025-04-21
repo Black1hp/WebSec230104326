@@ -1,6 +1,7 @@
 @extends('layouts.master')
 @section('title', 'Register')
 @section('content')
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
 <div class="d-flex justify-content-center">
   <div class="card m-4 col-sm-6">
     <div class="card-body">
@@ -35,9 +36,8 @@
         </div>
         
         <div class="form-group mb-4">
-          <div class="cf-turnstile" data-sitekey="0x4AAAAAABPbY4booday-3at" data-theme="light"></div>
-        </div>
-        
+    <div class="cf-turnstile" data-sitekey="{{ env('TURNSTILE_SITE_KEY') }}" data-theme="light"></div>
+</div>
         <div class="d-grid gap-2">
           <button type="submit" class="btn btn-primary">Register</button>
         </div>
