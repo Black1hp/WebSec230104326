@@ -1,6 +1,7 @@
 @extends('layouts.master')
 @section('title', 'Login')
 @section('content')
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
 <div class="d-flex justify-content-center">
   <div class="card m-4 col-sm-6">
     <div class="card-body">
@@ -22,7 +23,7 @@
         <input type="password" class="form-control" placeholder="password" name="password" required>
       </div>
       <div class="form-group mb-2">
-        <!-- Cloudflare Turnstile CAPTCHA widget -->
+        <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
       </div>
       <div class="form-group mb-2">
         <button type="submit" class="btn btn-primary">Login</button>

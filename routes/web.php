@@ -72,26 +72,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('users', [UsersController::class, 'list'])->name('users');
     Route::get('profile/{user?}', [UsersController::class, 'profile'])->name('profile');
     Route::get('users/edit/{user?}', [UsersController::class, 'edit'])->name('users_edit');
-    Route::post('users/save/{user}', [UsersController::class, 'save'])
-    ->middleware('throttle:5,1')
-    ->name('users_save');
+    Route::post('users/save/{user}', [UsersController::class, 'save'])->middleware('throttle:5,1')->name('users_save');
     Route::get('users/delete/{user}', [UsersController::class, 'delete'])->name('users_delete');
     Route::get('users/edit_password/{user?}', [UsersController::class, 'editPassword'])->name('edit_password');
-    Route::post('users/save_password/{user}', [UsersController::class, 'savePassword'])
-    ->middleware('throttle:5,1')
-    ->name('save_password');
+    Route::post('users/save_password/{user}', [UsersController::class, 'savePassword'])->middleware('throttle:5,1')->name('save_password');
     Route::get('users/create_employee', [UsersController::class, 'createEmployee'])->name('create_employee');
-    Route::post('users/store_employee', [UsersController::class, 'storeEmployee'])
-    ->middleware('throttle:5,1')
-    ->name('store_employee');
+    Route::post('users/store_employee', [UsersController::class, 'storeEmployee'])->middleware('throttle:5,1')->name('store_employee');
     Route::get('users/purchases/{user}', [UsersController::class, 'userPurchases'])->name('user_purchases');
     Route::get('users/charge_credit/{user}', [UsersController::class, 'chargeCredit'])->name('charge_credit');
-    Route::post('users/save_credit/{user}', [UsersController::class, 'saveCredit'])
-    ->middleware('throttle:5,1')
-    ->name('save_credit');
-    Route::post('users/give-gift/{user}', [UsersController::class, 'giveGift'])
-    ->middleware('throttle:5,1')
-    ->name('give_gift');
+    Route::post('users/save_credit/{user}', [UsersController::class, 'saveCredit'])->middleware('throttle:5,1')->name('save_credit');
+    Route::post('users/give-gift/{user}', [UsersController::class, 'giveGift'])->middleware('throttle:5,1')->name('give_gift');
 });
 
 Route::get('products', [ProductsController::class, 'list'])->name('products_list');

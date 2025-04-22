@@ -36,7 +36,7 @@
         </div>
         
         <div class="form-group mb-4">
-    <div class="cf-turnstile" data-sitekey="{{ env('TURNSTILE_SITE_KEY') }}" data-theme="light"></div>
+    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
 </div>
         <div class="d-grid gap-2">
           <button type="submit" class="btn btn-primary">Register</button>

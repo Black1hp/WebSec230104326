@@ -82,7 +82,7 @@ class UsersController extends Controller {
         if (!$turnstileResponse) {
             return redirect()->back()->withInput($request->input())->withErrors(['captcha' => 'Please complete the CAPTCHA.']);
         }
-        $cfSecret = env('CF_TURNSTILE_SECRET');
+        $cfSecret = config('services.turnstile.secret_key');
         $verifyResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
             'secret' => $cfSecret,
             'response' => $turnstileResponse,
@@ -152,6 +152,22 @@ class UsersController extends Controller {
     }
 
     public function doLogin(Request $request) {
+        // Cloudflare Turnstile CAPTCHA validation
+        $turnstileResponse = $request->input('cf-turnstile-response');
+        if (!$turnstileResponse) {
+            return redirect()->back()->withInput($request->only('email'))->withErrors(['captcha' => 'Please complete the CAPTCHA.']);
+        }
+        $cfSecret = config('services.turnstile.secret_key');
+        $verifyResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret' => $cfSecret,
+            'response' => $turnstileResponse,
+            'remoteip' => $request->ip(),
+        ]);
+        $verifyBody = $verifyResponse->json();
+        if (!($verifyBody['success'] ?? false)) {
+            return redirect()->back()->withInput($request->only('email'))->withErrors(['captcha' => 'CAPTCHA validation failed. Please try again.']);
+        }
+        
         $credentials = $request->only('email', 'password');
         
         if (!Auth::attempt($credentials)) {
