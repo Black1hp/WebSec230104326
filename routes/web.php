@@ -23,6 +23,18 @@ Route::get('logout', [UsersController::class, 'doLogout'])->name('do_logout');
 Route::get('/auth/google', [UsersController::class, 'redirectToGoogle'])->name('login_with_google');
 Route::get('/auth/google/callback', [UsersController::class, 'handleGoogleCallback'])->name('google.callback');
 
+
+// Github Authentication Routes
+Route::get('/auth/github', [UsersController::class, 'redirectToGithub'])->name('login_with_github');
+Route::get('/auth/callback', [UsersController::class, 'handleGithubCallback'])->name('github.callback');
+
+
+
+// // Facebook Authentication Routes
+// Route::get('/auth/facebook', [UsersController::class, 'redirectToFacebook'])->name('login_with_facebook');
+// Route::get('/auth/facebook/callback', [UsersController::class, 'handleFacebookCallback'])->name('facebook.callback');
+
+
 // Email Verification Routes
 Route::get('/email/verify', function () {
     if (!auth()->check()) {

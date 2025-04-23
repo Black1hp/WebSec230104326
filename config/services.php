@@ -41,6 +41,18 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'facebook' => [
+        'client_id' => env('FB_CLIENT_ID'),
+        'client_secret' => env('FB_CLIENT_SECRET'),
+        'redirect' => env('FB_CALLBACK_REDIRECTS'),
+    ],
+
+    'github' => [
+        'client_id' => env('GITHUB_CLIENT_ID'),
+        'client_secret' => env('GITHUB_CLIENT_SECRET'),
+        'redirect' => env('GITHUB_CALLBACK_REDIRECTS', config('app.url') . '/auth/callback'),
+    ],
+
     'turnstile' => [
         'site_key' => env('TURNSTILE_SITE_KEY'),
         'secret_key' => env('CF_TURNSTILE_SECRET'),

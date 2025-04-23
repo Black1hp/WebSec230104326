@@ -35,6 +35,12 @@
           <i class="fab fa-google"></i> Login with Google
         </a>
       </div>
+      <div class="form-group mb-2">
+        <p class="text-center">Or</p>
+        <a href="{{ route('login_with_github') }}" class="btn btn-primary w-100">
+          <i class="fab fa-github"></i> Login with Github
+        </a>
+      </div>
     </form>
     </div>
   </div>

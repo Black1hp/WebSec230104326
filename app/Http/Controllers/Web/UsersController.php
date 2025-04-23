@@ -727,4 +727,94 @@ class UsersController extends Controller {
                 ->with('error', 'Google authentication failed. Please try again or contact support.');
         }
     }
+
+    public function redirectToGithub()
+    {
+        // Force the correct callback URL to match GitHub OAuth app settings
+        return Socialite::driver('github')
+            ->redirectUrl('http://test.localhost.com/auth/callback')
+            ->redirect();
+    }
+
+    public function handleGithubCallback()
+    {
+        try {
+            // Force the correct callback URL for the user() method as well
+            $githubUser = Socialite::driver('github')
+                ->redirectUrl('http://test.localhost.com/auth/callback')
+                ->user();
+            
+            // Debug the GitHub user data
+            \Log::debug('GitHub user data received', [
+                'id' => $githubUser->id,
+                'name' => $githubUser->name,
+                'nickname' => $githubUser->nickname,
+                'avatar' => $githubUser->avatar,
+                'email_exists' => !empty($githubUser->email),
+            ]);
+            
+            // Check if email is private/not available
+            if (empty($githubUser->email)) {
+                \Log::warning('GitHub user email is private or not available', ['id' => $githubUser->id]);
+                return redirect()->route('login')
+                    ->with('error', 'Unable to access your GitHub email. Please make your email public in GitHub settings or use another login method.');
+            }
+            
+            $user = User::where('email', $githubUser->email)->first();
+            
+            if (!$user) {
+                // Create new user
+                \Log::info('Creating new user from GitHub', ['email' => $githubUser->email]);
+                
+                // Ensure we have a valid name (GitHub may not provide one)
+                $userName = $githubUser->name;
+                if (empty($userName)) {
+                    $userName = $githubUser->nickname ?? 'GitHub User';
+                }
+                
+                $user = User::create([
+                    'name' => $userName,
+                    'email' => $githubUser->email,
+                    'github_id' => $githubUser->id,
+                    'github_token' => $githubUser->token,
+                    'github_refresh_token' => $githubUser->refreshToken ?? null,
+                    'password' => bcrypt(Str::random(16)), // Random password for Github users
+                    'email_verified_at' => now(), // Consider GitHub email as verified
+                ]);
+                
+                // Assign Customer role
+                $user->assignRole('Customer');
+            } else {
+                // Update existing user's Github info
+                \Log::info('Updating existing user with GitHub info', ['email' => $githubUser->email]);
+                $user->update([
+                    'github_id' => $githubUser->id,
+                    'github_token' => $githubUser->token,
+                    'github_refresh_token' => $githubUser->refreshToken,
+                ]);
+            }
+            
+            Auth::login($user);
+            
+            return redirect('/');
+        } catch (\Exception $e) {
+            \Log::error('Github authentication failed', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // User-friendly error message
+            $errorMessage = 'GitHub authentication failed.';
+            
+            // Add more details for non-production environments
+            if (config('app.env') !== 'production') {
+                $errorMessage .= ' Error: ' . $e->getMessage();
+            }
+            
+            return redirect()->route('login')
+                ->with('error', $errorMessage);
+        }
+    }
 }
