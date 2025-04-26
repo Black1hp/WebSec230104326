@@ -18,17 +18,41 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Gift;
+use App\Mail\SendMail;
 
 class UsersController extends Controller {
 
 	use ValidatesRequests;
 
+	/**
+	 * Check if the request IP is allowed for admin functions
+	 * 
+	 * @param Request $request
+	 * @return bool
+	 */
+	protected function checkIpRestriction(Request $request)
+	{
+	    $allowedIps = ['127.0.0.1', '::1']; // Add your admin IPs
+	    
+	    if (!in_array($request->ip(), $allowedIps)) {
+	        abort(403, 'Unauthorized action. Your IP is not allowed to perform this action.');
+	        return false;
+	    }
+	    
+	    return true;
+	}
+
     public function list(Request $request) {
-        if(!auth()->user()->hasPermissionTo('show_users'))abort(401);
+        // Check IP restriction
+        $this->checkIpRestriction($request);
+        
+        if(!auth()->user()->hasPermissionTo('show_users')) abort(401);
 
         $query = User::select('*');
 

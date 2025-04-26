@@ -20,6 +20,24 @@ class ProductsController extends Controller {
     }
     
     /**
+     * Check if the request IP is allowed for admin functions
+     * 
+     * @param Request $request
+     * @return bool
+     */
+    protected function checkIpRestriction(Request $request)
+    {
+        $allowedIps = ['127.0.0.1', '::1']; // Add your admin IPs
+        
+        if (!in_array($request->ip(), $allowedIps)) {
+            abort(403, 'Unauthorized action. Your IP is not allowed to perform this action.');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
      * Return a purchased product - increase stock and refund credit
      */
 
@@ -46,6 +64,9 @@ class ProductsController extends Controller {
 
 	public function edit(Request $request, Product $product = null) {
 		if(!auth()->user()) return redirect('/');
+		
+		// Check IP restriction
+		$this->checkIpRestriction($request);
 
 		// Check if user has permission to edit products or is an Employee/Admin
 		if(!auth()->user()->hasPermissionTo('edit_products') &&
@@ -84,6 +105,9 @@ class ProductsController extends Controller {
 	}
 
 	public function delete(Request $request, Product $product) {
+		// Check IP restriction
+		$this->checkIpRestriction($request);
+		
 		// Check if user has permission to delete products or is an Employee/Admin
 		if(!auth()->user()->hasPermissionTo('delete_products') &&
 		   !auth()->user()->hasRole('Employee') &&
