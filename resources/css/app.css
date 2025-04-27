@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Responsive utilities */
+.mobile-only {
+    display: none !important;
+}
+
+.desktop-only {
+    display: block !important;
+}
+
+/* Responsive Image handling */
+.responsive-img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Custom breakpoints */
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* Improve font sizing on mobile */
+    h1 {
+        font-size: 1.8rem !important;
+    }
+    
+    h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    .container {
+        padding: 10px !important;
+    }
+    
+    /* Improve form element spacing on mobile */
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* Mobile-first grid system enhancements */
+.responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+}
+
+@media (min-width: 576px) {
+    .responsive-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .responsive-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .responsive-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
