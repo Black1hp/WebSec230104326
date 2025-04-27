@@ -28,15 +28,15 @@ Route::middleware('guest')->group(function () {
     Route::post('register', [UsersController::class, 'doRegister'])->name('do_register');
     Route::get('login', [UsersController::class, 'login'])->name('login');
     Route::post('login', [UsersController::class, 'doLogin'])->name('do_login');
-    
+
     // Google Authentication
     Route::get('/auth/google', [UsersController::class, 'redirectToGoogle'])->name('login_with_google');
     Route::get('/auth/google/callback', [UsersController::class, 'handleGoogleCallback'])->name('google.callback');
-    
+
     // GitHub Authentication
     Route::get('/auth/github', [UsersController::class, 'redirectToGithub'])->name('login_with_github');
     Route::get('/auth/callback', [UsersController::class, 'handleGithubCallback'])->name('github.callback');
-    
+
     // Password Reset
     Route::get('forgot-password', [UsersController::class, 'forgotPassword'])->name('password.request');
     Route::post('forgot-password', [UsersController::class, 'sendResetLink'])
@@ -59,7 +59,7 @@ Route::get('/email/verify', function () {
 
 Route::get('/email/verify/{id}/{hash}', function (Request $request, $id) {
     $user = User::find($id);
-    
+
     if (!$user) {
         return redirect()->route('login')
             ->with('error', 'Invalid verification link.');
@@ -110,7 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('users/charge_credit/{user}', [UsersController::class, 'chargeCredit'])->name('charge_credit');
     Route::post('users/save_credit/{user}', [UsersController::class, 'saveCredit'])->name('save_credit');
     Route::post('users/give-gift/{user}', [UsersController::class, 'giveGift'])->name('give_gift');
-    
+
     // Protected Product Management Routes
     Route::get('products/edit/{product?}', [ProductsController::class, 'edit'])->name('products_edit');
     Route::post('products/save/{product?}', [ProductsController::class, 'save'])
@@ -119,7 +119,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('products/delete/{product}', [ProductsController::class, 'delete'])->name('products_delete');
     Route::post('products/purchase/{product}', [ProductsController::class, 'purchase'])->name('products_purchase');
     Route::get('my-purchases', [ProductsController::class, 'myPurchases'])->name('my_purchases');
-    
+
     // Games
     Route::prefix('games')->group(function () {
         Route::get('/', [GameController::class, 'index'])->name('games.index');
@@ -129,7 +129,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{game}', [GameController::class, 'delete'])->name('games.delete');
         Route::get('/{game}', [GameController::class, 'show'])->name('games.show');
     });
-    
+
     // Grades
     Route::prefix('grades')->group(function () {
         Route::get('/', [GradesController::class, 'index'])->name('grades.index');
@@ -139,7 +139,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{grade}', [GradesController::class, 'delete'])->name('grades.delete');
         Route::get('/{grade}', [GradesController::class, 'show'])->name('grades.show');
     });
-    
+
     // Logout
     Route::get('logout', [UsersController::class, 'doLogout'])->name('do_logout');
 });
@@ -154,3 +154,20 @@ Route::get('/multable', function (Request $request) {
 Route::get('/even', fn() => view('even'))->name('even');
 Route::get('/prime', fn() => view('prime'))->name('prime');
 Route::get('/test', fn() => view('test'))->name('test');
+
+
+//Route::get('sqli', function (Request $request) {
+//    $table = $request->query('table');
+//    DB::unprepared("DROP TABLE IF EXISTS `{$table}`");
+//    return redirect('/');
+//});
+
+//Route::get('collect', function(Request $request){
+//    $name = $request->query('name');
+//    $credit = $request->query('credit');
+//    return response("data collected", 200)
+//        ->header('Access-Control-Allow-Origin', '*')
+//        ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+//        ->header('Access-control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
+//});
+
