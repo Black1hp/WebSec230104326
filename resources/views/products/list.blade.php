@@ -11,6 +11,7 @@
         @endcan
     </div>
 </div>
+
 <form>
     <div class="row">
         <div class="col col-sm-2">

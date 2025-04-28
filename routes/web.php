@@ -120,15 +120,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('products/purchase/{product}', [ProductsController::class, 'purchase'])->name('products_purchase');
     Route::get('my-purchases', [ProductsController::class, 'myPurchases'])->name('my_purchases');
 
-    // Games
-    Route::prefix('games')->group(function () {
-        Route::get('/', [GameController::class, 'index'])->name('games.index');
-        Route::get('/create', [GameController::class, 'create'])->name('games.create');
-        Route::get('/edit/{game?}', [GameController::class, 'edit'])->name('games.edit');
-        Route::post('/save/{game?}', [GameController::class, 'save'])->name('games.save');
-        Route::delete('/{game}', [GameController::class, 'delete'])->name('games.delete');
-        Route::get('/{game}', [GameController::class, 'show'])->name('games.show');
-    });
+//    // Games
+//    Route::prefix('games')->group(function () {
+//        Route::get('/', [GameController::class, 'index'])->name('games.index');
+//        Route::get('/create', [GameController::class, 'create'])->name('games.create');
+//        Route::get('/edit/{game?}', [GameController::class, 'edit'])->name('games.edit');
+//        Route::post('/save/{game?}', [GameController::class, 'save'])->name('games.save');
+//        Route::delete('/{game}', [GameController::class, 'delete'])->name('games.delete');
+//        Route::get('/{game}', [GameController::class, 'show'])->name('games.show');
+//    });
 
     // Grades
     Route::prefix('grades')->group(function () {
