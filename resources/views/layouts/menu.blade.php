@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
         <a class="navbar-brand" href="./">Web Security</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
@@ -35,7 +35,20 @@
                 @endcan
             </ul>
 
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center">
+                <!-- Dark Mode Toggle -->
+                <li class="nav-item me-3">
+                    <div class="d-flex align-items-center">
+                        <label class="theme-switch mb-0" for="darkModeToggle">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="theme-slider"></span>
+                        </label>
+                        <span class="ms-2 theme-icon" id="themeIcon">
+                            <i class="bi bi-sun-fill"></i>
+                        </span>
+                    </div>
+                </li>
+                
                 @auth
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"

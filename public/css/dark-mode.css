@@ -1,0 +1,103 @@
+/* Dark Mode Styles */
+
+/* Apply transition for smooth theme switching */
+:root {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html {
+  transition: background-color 0.3s ease;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode toggle switch styling */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Custom toggle switch */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.theme-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.theme-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .theme-slider {
+  background-color: #0d6efd;
+}
+
+input:focus + .theme-slider {
+  box-shadow: 0 0 1px #0d6efd;
+}
+
+input:checked + .theme-slider:before {
+  transform: translateX(26px);
+}
+
+/* Additional dark mode specific adjustments */
+[data-bs-theme="dark"] .navbar {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme="dark"] .card {
+  background-color: #2b3035;
+  border-color: #343a40;
+}
+
+[data-bs-theme="dark"] .table {
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: #343a40;
+  border-color: #495057;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover {
+  background-color: #495057;
+}
+
+/* Icons for dark/light mode */
+.theme-icon {
+  display: inline-block;
+  transition: transform 0.5s ease;
+}
+
+[data-bs-theme="dark"] .theme-icon {
+  transform: rotate(360deg);
+} 

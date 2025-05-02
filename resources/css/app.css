@@ -2,6 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Bootstrap theme variables */
+:root {
+    --bs-body-bg: #fff;
+    --bs-body-color: #212529;
+    --bs-border-color: #dee2e6;
+    --bs-card-bg: #fff;
+    --bs-card-border-color: rgba(0, 0, 0, 0.175);
+    --bs-modal-bg: #fff;
+    --bs-dropdown-bg: #fff;
+    --bs-dropdown-link-hover-bg: #f8f9fa;
+    --bs-navbar-bg: #f8f9fa;
+}
+
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #f8f9fa;
+    --bs-border-color: #495057;
+    --bs-card-bg: #343a40;
+    --bs-card-border-color: rgba(255, 255, 255, 0.175);
+    --bs-modal-bg: #343a40;
+    --bs-dropdown-bg: #343a40;
+    --bs-dropdown-link-hover-bg: #495057;
+    --bs-navbar-bg: #343a40;
+    --bs-dropdown-link-color: rgba(255, 255, 255, 0.85);
+    color-scheme: dark;
+}
+
+/* Theme-agnostic elements */
+.navbar {
+    background-color: var(--bs-navbar-bg);
+}
+
+.dropdown-menu {
+    background-color: var(--bs-dropdown-bg);
+    border-color: var(--bs-border-color);
+}
+
+.dropdown-item:hover {
+    background-color: var(--bs-dropdown-link-hover-bg);
+}
+
+.card {
+    background-color: var(--bs-card-bg);
+    border-color: var(--bs-card-border-color);
+}
+
+.modal-content {
+    background-color: var(--bs-modal-bg);
+}
+
 /* Responsive utilities */
 .mobile-only {
     display: none !important;
