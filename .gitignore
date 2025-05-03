@@ -1,3 +1,4 @@
+# Laravel specific
 /.phpunit.cache
 /node_modules
 /public/build
@@ -7,40 +8,74 @@
 /storage/pail
 /vendor
 .env
-.env.backup
-.env.production
-.phpactor.json
+.env.*
+!.env.example
 .phpunit.result.cache
+auth.json
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-/auth.json
+
+# IDE & Editor folders
 /.fleet
 /.idea
-/.nova
 /.vscode
+/.nova
 /.zed
+.phpstorm.meta.php
+_ide_helper*.php
+.phpactor.json
 
 # OS specific files
 .DS_Store
 Thumbs.db
+desktop.ini
+*.swp
+*.swo
 
 # Logs and databases
 *.log
 *.sql
 *.sqlite
+*.sqlite3
+
+# Backups
+*.bak
+*.backup
+/storage/app/backups
+
+# SSL/TLS certificates (security-sensitive)
+*.pem
+*.crt
+*.csr
+*.key
+*.ca-bundle
+*.p12
+*.pfx
+/ssl/*
+/certificates/*
+!/ssl/.gitkeep
+!/certificates/.gitkeep
+
+# Composer
+composer.phar
+/vendor/
+
+# Dependencies
+/node_modules
+/bower_components
+package-lock.json
+yarn.lock
 
 # Local configuration files
 *.local.php
 local-config.php
 
-# Composer
-composer.phar
+# Testing
+/coverage
+.phpunit.result.cache
+.phpunit.cache
 
-# PHPStorm project files
-.phpstorm.meta.php
-_ide_helper*.php
-
-# Laravel backups
-/storage/app/backups
+# Caches
+.cache/

@@ -1,0 +1,11 @@
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+C = EG
+ST = Cairo
+L = Cairo
+O = WebSec
+OU = WebSec Service
+CN = test.localhost.com

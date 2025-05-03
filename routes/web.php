@@ -103,9 +103,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('users/edit_password/{user?}', [UsersController::class, 'editPassword'])->name('edit_password');
     Route::post('users/save_password/{user}', [UsersController::class, 'savePassword'])->name('save_password');
     Route::get('users/create_employee', [UsersController::class, 'createEmployee'])->name('create_employee');
-    Route::post('users/store_employee', [UsersController::class, 'storeEmployee'])
-        ->middleware(['throttle:5,1'])
-        ->name('store_employee');
+    Route::post('users/store_employee', [UsersController::class, 'storeEmployee'])->middleware(['throttle:5,1'])->name('store_employee');
     Route::get('users/purchases/{user}', [UsersController::class, 'userPurchases'])->name('user_purchases');
     Route::get('users/charge_credit/{user}', [UsersController::class, 'chargeCredit'])->name('charge_credit');
     Route::post('users/save_credit/{user}', [UsersController::class, 'saveCredit'])->name('save_credit');
@@ -113,22 +111,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Protected Product Management Routes
     Route::get('products/edit/{product?}', [ProductsController::class, 'edit'])->name('products_edit');
-    Route::post('products/save/{product?}', [ProductsController::class, 'save'])
-        ->middleware(['throttle:5,1'])
-        ->name('products_save');
+    Route::post('products/save/{product?}', [ProductsController::class, 'save'])->middleware(['throttle:5,1'])->name('products_save');
     Route::get('products/delete/{product}', [ProductsController::class, 'delete'])->name('products_delete');
     Route::post('products/purchase/{product}', [ProductsController::class, 'purchase'])->name('products_purchase');
     Route::get('my-purchases', [ProductsController::class, 'myPurchases'])->name('my_purchases');
 
-//    // Games
-//    Route::prefix('games')->group(function () {
-//        Route::get('/', [GameController::class, 'index'])->name('games.index');
-//        Route::get('/create', [GameController::class, 'create'])->name('games.create');
-//        Route::get('/edit/{game?}', [GameController::class, 'edit'])->name('games.edit');
-//        Route::post('/save/{game?}', [GameController::class, 'save'])->name('games.save');
-//        Route::delete('/{game}', [GameController::class, 'delete'])->name('games.delete');
-//        Route::get('/{game}', [GameController::class, 'show'])->name('games.show');
-//    });
+    // Games
+    Route::prefix('games')->group(function () {
+        Route::get('/', [GameController::class, 'index'])->name('games.index');
+        Route::get('/create', [GameController::class, 'create'])->name('games.create');
+        Route::get('/edit/{game?}', [GameController::class, 'edit'])->name('games.edit');
+        Route::post('/save/{game?}', [GameController::class, 'save'])->name('games.save');
+        Route::delete('/{game}', [GameController::class, 'delete'])->name('games.delete');
+        Route::get('/{game}', [GameController::class, 'show'])->name('games.show');
+    });
 
     // Grades
     Route::prefix('grades')->group(function () {
