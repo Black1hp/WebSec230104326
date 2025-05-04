@@ -331,34 +331,117 @@ class UsersController extends Controller {
     }
 
     public function profile(Request $request, User $user = null) {
-
+        
         $user = $user??auth()->user();
 
-        if(auth()->id()!=$user->id) {
+        if(auth()->id()!=$user?->id) {
             if(!auth()->user()->hasPermissionTo('show_users')) abort(401);
         }
 
-        // Prevent employees from viewing admin profiles
-        if(auth()->user()->hasRole('Employee') && $user->hasRole('Admin') && auth()->id() != $user->id) {
-            return redirect()->route('users')->with('error', 'You are not authorized to view administrator profiles.');
-        }
-
-        // Prevent employees from viewing other employee profiles
-        if(auth()->user()->hasRole('Employee') && $user->hasRole('Employee') && auth()->id() != $user->id) {
-            return redirect()->route('users')->with('error', 'You are not authorized to view other employee profiles.');
-        }
-
-        $permissions = [];
-        foreach($user->permissions as $permission) {
-            $permissions[] = $permission;
-        }
-        foreach($user->roles as $role) {
-            foreach($role->permissions as $permission) {
-                $permissions[] = $permission;
-            }
-        }
+        // Get all direct and role-based permissions for display
+        $permissions = $this->getUserPermissions($user);
 
         return view('users.profile', compact('user', 'permissions'));
+    }
+
+    /**
+     * Get all permissions for a user, including those from roles
+     *
+     * @param User $user
+     * @return Collection
+     */
+    protected function getUserPermissions(User $user)
+    {
+        // Get all unique permissions from direct permissions and role permissions
+        $directPermissions = $user->permissions;
+        $rolePermissions = collect();
+        
+        foreach($user->roles as $role) {
+            foreach($role->permissions as $permission) {
+                $rolePermissions->push($permission);
+            }
+        }
+        
+        // Combine and remove duplicates
+        return $directPermissions->concat($rolePermissions)
+            ->unique('id')
+            ->sortBy('name');
+    }
+
+    /**
+     * Reset and initialize roles and permissions
+     * This is helpful for administrators who need to reset the system
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function resetRolesAndPermissions(Request $request)
+    {
+        // Only admins from localhost can run this
+        if (!auth()->user()->hasRole('Admin') || !$this->checkIpRestriction($request)) {
+            abort(403, 'Unauthorized');
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            // Clear cache
+            Artisan::call('cache:clear');
+            
+            // Define default permissions
+            $defaultPermissions = [
+                ['name' => 'admin_users', 'display_name' => 'Administer Users'],
+                ['name' => 'show_users', 'display_name' => 'View Users'],
+                ['name' => 'edit_users', 'display_name' => 'Edit Users'],
+                ['name' => 'delete_users', 'display_name' => 'Delete Users'],
+                ['name' => 'edit_products', 'display_name' => 'Edit Products'],
+                ['name' => 'delete_products', 'display_name' => 'Delete Products'],
+            ];
+            
+            // Create default permissions
+            foreach ($defaultPermissions as $permission) {
+                Permission::firstOrCreate(['name' => $permission['name']], [
+                    'display_name' => $permission['display_name'],
+                    'guard_name' => 'web'
+                ]);
+            }
+            
+            // Define roles with their permissions
+            $roles = [
+                [
+                    'name' => 'Admin',
+                    'permissions' => ['admin_users', 'show_users', 'edit_users', 'delete_users', 'edit_products', 'delete_products']
+                ],
+                [
+                    'name' => 'Employee',
+                    'permissions' => ['show_users', 'edit_users', 'edit_products']
+                ],
+                [
+                    'name' => 'Customer',
+                    'permissions' => []
+                ]
+            ];
+            
+            // Create roles and assign permissions
+            foreach ($roles as $roleData) {
+                $role = Role::firstOrCreate(['name' => $roleData['name']], ['guard_name' => 'web']);
+                $permissions = Permission::whereIn('name', $roleData['permissions'])->get();
+                $role->syncPermissions($permissions);
+            }
+            
+            // Make sure current user keeps admin role
+            $user = auth()->user();
+            $user->assignRole('Admin');
+            
+            DB::commit();
+            
+            return redirect()->route('users')->with('success', 'Roles and permissions have been reset successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error resetting roles and permissions', ['exception' => $e]);
+            
+            return redirect()->route('users')->with('error', 'Error resetting roles and permissions: ' . $e->getMessage());
+        }
     }
 
     public function edit(Request $request, User $user = null) {
@@ -419,8 +502,44 @@ class UsersController extends Controller {
         $user->save();
 
         if(auth()->user()->hasPermissionTo('admin_users')) {
-            $user->syncRoles($request->roles);
-            $user->syncPermissions($request->permissions);
+            // Role-based permissions logic
+            $roles = $request->roles ?? [];
+            $directPermissions = $request->permissions ?? [];
+            
+            // Handle role assignment - ensure we have only one role
+            if (count($roles) > 1) {
+                $roles = [array_shift($roles)]; // Take only the first role
+            }
+            
+            // Process automatic permissions for Admin role
+            if (in_array('Admin', $roles)) {
+                // Get all permissions
+                $allPermissions = Permission::pluck('name')->toArray();
+                
+                // Assign all permissions to the user with Admin role
+                $user->syncRoles(['Admin']);
+                $user->syncPermissions($allPermissions);
+            } 
+            // Process automatic permissions for Employee role
+            else if (in_array('Employee', $roles)) {
+                // Common employee permissions
+                $employeePermissions = [
+                    'show_users', 
+                    'edit_users', 
+                    'edit_products'
+                ];
+                
+                // Merge with direct permissions
+                $mergedPermissions = array_unique(array_merge($employeePermissions, $directPermissions));
+                
+                $user->syncRoles(['Employee']);
+                $user->syncPermissions($mergedPermissions);
+            }
+            // Handle Customer or custom roles
+            else {
+                $user->syncRoles($roles);
+                $user->syncPermissions($directPermissions);
+            }
 
             Artisan::call('cache:clear');
         }

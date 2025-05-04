@@ -40,7 +40,15 @@
                     <div class="mb-3">
                         <strong>Roles:</strong>
                         @foreach($user->roles as $role)
+                            @if($role->name == 'Admin')
+                            <span class="badge bg-warning text-dark"><i class="bi bi-shield-fill-check"></i> {{$role->name}}</span>
+                            @elseif($role->name == 'Employee')
+                            <span class="badge bg-info"><i class="bi bi-person-badge-fill"></i> {{$role->name}}</span>
+                            @elseif($role->name == 'Customer')
+                            <span class="badge bg-success"><i class="bi bi-person-fill"></i> {{$role->name}}</span>
+                            @else
                             <span class="badge bg-primary"><i class="bi bi-person-badge"></i> {{$role->name}}</span>
+                            @endif
                         @endforeach
                     </div>
                     @if($user->hasRole('Customer'))
@@ -51,9 +59,14 @@
                     @endif
                     <div class="mb-3">
                         <strong>Permissions:</strong>
-                        @foreach($permissions as $permission)
-                            <span class="badge bg-success"><i class="bi bi-shield-lock"></i> {{$permission->display_name}}</span>
-                        @endforeach
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            @foreach($permissions as $permission)
+                                <span class="badge bg-secondary"><i class="bi bi-shield-lock"></i> {{$permission->display_name}}</span>
+                            @endforeach
+                            @if(count($permissions) == 0)
+                                <span class="text-muted">No specific permissions assigned.</span>
+                            @endif
+                        </div>
                     </div>
                     <!-- Recent Activity Placeholder -->
                     <div class="mb-3">

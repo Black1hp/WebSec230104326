@@ -108,6 +108,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('users/charge_credit/{user}', [UsersController::class, 'chargeCredit'])->name('charge_credit');
     Route::post('users/save_credit/{user}', [UsersController::class, 'saveCredit'])->name('save_credit');
     Route::post('users/give-gift/{user}', [UsersController::class, 'giveGift'])->name('give_gift');
+    Route::get('users/reset-roles', [UsersController::class, 'resetRolesAndPermissions'])->name('reset_roles');
 
     // Protected Product Management Routes
     Route::get('products/edit/{product?}', [ProductsController::class, 'edit'])->name('products_edit');
