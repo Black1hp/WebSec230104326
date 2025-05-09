@@ -164,10 +164,29 @@ class UsersController extends Controller {
         }
         catch(\Exception $e) {
             DB::rollBack();
-            \Log::error('Registration failed', ['exception' => $e]);
+            \Log::error('Registration failed', [
+                'exception' => $e,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        
+            // Provide more specific error messages
+            $errorMessage = 'Registration failed: ';
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                if (str_contains($e->getMessage(), 'users_email_unique')) {
+                    $errorMessage .= 'This email is already registered.';
+                } else {
+                    $errorMessage .= 'Database error occurred. Please try again.';
+                }
+            } elseif ($e instanceof \PDOException) {
+                $errorMessage .= 'Database connection error. Please try again later.';
+            } else {
+                $errorMessage .= $e->getMessage();
+            }
+        
             return redirect()->back()
                 ->withInput($request->input())
-                ->withErrors('Registration failed. Please try again or contact support.');
+                ->withErrors($errorMessage);
         }
     }
 

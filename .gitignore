@@ -50,6 +50,15 @@ desktop.ini
 *.crt
 *.csr
 *.key
+*.cer
+*.der
+*.priv
+*.srl
+*.p12
+*.pfx
+/storage/certs/
+/certs/
+*.key
 *.ca-bundle
 *.p12
 *.pfx
@@ -79,3 +88,4 @@ local-config.php
 
 # Caches
 .cache/
+certs/ 

@@ -12,9 +12,15 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Auth;
 
 // Public Routes
 Route::get('/', function () {
+    $email = emailFromLoginCertificate();
+    if($email && !auth()->user()) {
+        $user = User::where('email', $email)->first();
+        if($user) Auth::setUser($user);
+    }
     return view('welcome');
 })->name('home')->middleware(['cache.headers:public;max_age=300;etag']);
 
@@ -94,6 +100,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Protected Routes (require authentication and email verification)
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Product Likes
+    Route::post('products/{product}/toggle-like', [ProductsController::class, 'toggleProductLike'])->name('product_toggle_like');
     // User Management
     Route::get('users', [UsersController::class, 'list'])->name('users');
     Route::get('profile/{user?}', [UsersController::class, 'profile'])->name('profile');

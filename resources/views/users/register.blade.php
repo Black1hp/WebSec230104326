@@ -6,7 +6,7 @@
   <div class="card m-4 col-sm-6">
     <div class="card-body">
       <h3 class="card-title mb-4 text-center">Register Account</h3>
-      <form action="{{route('do_register')}}" method="post">
+      <form action="{{route('do_register')}}" method="post" id="registerForm">
         {{ csrf_field() }}
         
         @foreach($errors->all() as $error)
@@ -40,7 +40,8 @@
         </div>
         
         <div class="form-group mb-2">
-    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
+    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light" data-callback="onTurnstileSuccess"></div>
+<input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" />
 </div>
         <div class="d-grid gap-2">
           <button type="submit" class="btn btn-primary">Register</button>
@@ -68,4 +69,17 @@
     </div>
   </div>
 </div>
+<script>
+function onTurnstileSuccess(token) {
+    document.getElementById('cf-turnstile-response').value = token;
+}
+// Optional: Prevent submit if CAPTCHA not completed
+const form = document.getElementById('registerForm');
+form.addEventListener('submit', function(e) {
+    if (!document.getElementById('cf-turnstile-response').value) {
+        alert('Please complete the CAPTCHA.');
+        e.preventDefault();
+    }
+});
+</script>
 @endsection
