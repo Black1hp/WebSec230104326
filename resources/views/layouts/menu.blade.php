@@ -23,6 +23,12 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{route('products_list')}}">Products</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{route('cryptography')}}">Cryptography</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{route('webcrypto')}}">Web Crypto</a>
+            </li>
             @role('Customer')
             <li class="nav-item">
                 <a class="nav-link" href="{{route('my_purchases')}}">My Purchases</a>

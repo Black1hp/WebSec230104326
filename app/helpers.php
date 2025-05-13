@@ -1,5 +1,5 @@
 <?php
-   
+
 if (!function_exists('isPrime')) {
     function isPrime($number)
     {
